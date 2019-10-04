@@ -31,3 +31,4 @@
 ..\obj\main.o: ..\STM32F10x_FWLib\inc\misc.h
 ..\obj\main.o: ..\SYSTEM\sys\sys.h
 ..\obj\main.o: ..\HARDWARE\move.h
+..\obj\main.o: ..\SYSTEM\delay\delay.h

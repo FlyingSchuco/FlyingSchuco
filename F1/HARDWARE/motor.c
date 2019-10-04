@@ -76,9 +76,9 @@ void Motor1Run(void)
 
 void Motor1RunRV(void)
 {
-	MOTOR0in1 = 0;
-	MOTOR0in2 = 1;
-	EN0 = 1;
+	MOTOR1in1 = 0;
+	MOTOR1in2 = 1;
+	EN1 = 1;
 }
 
 void Motor2Run(void)
@@ -90,9 +90,9 @@ void Motor2Run(void)
 
 void Motor2RunRV(void)
 {
-	MOTOR0in1 = 0;
-	MOTOR0in2 = 1;
-	EN0 = 1;
+	MOTOR2in1 = 0;
+	MOTOR2in2 = 1;
+	EN2 = 1;
 }
 
 void Motor3Run(void)
@@ -104,9 +104,9 @@ void Motor3Run(void)
 
 void Motor3RunRV(void)
 {
-	MOTOR0in1 = 0;
-	MOTOR0in2 = 1;
-	EN0 = 1;
+	MOTOR3in1 = 0;
+	MOTOR3in2 = 1;
+	EN3 = 1;
 }
 	
 void MotorSelfCheck(void)
