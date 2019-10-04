@@ -47,7 +47,7 @@
             <NotGenerated>0</NotGenerated>
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
-          <OutputDirectory>..\</OutputDirectory>
+          <OutputDirectory>..\OBJ\</OutputDirectory>
           <OutputName>projectF1</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>

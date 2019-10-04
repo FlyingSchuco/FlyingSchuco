@@ -1,11 +1,11 @@
-#include "ymq2.h"
+#include "motor.h"
+#include "move.h"
 
-int main(void)
+int main()
 {
-	OUT(PC,13);
-	IN(PA,0);
+	MotorInit();
 	while(1)
 	{
-		PCout(13)=PAin(0);
+		MotorSelfCheck();
 	}
 }
