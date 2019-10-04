@@ -1,8 +1,8 @@
 #ifndef _MOTOR_H
 #define _MOTOR_H
-#include "stm32f10x.h"
-#include "stm32f10x_gpio.h"
 #include "sys.h"
+#include "delay.h"
+#include "pwm.h"
 //MOTOR0
 #define EN0 PBout(6)
 #define MOTOR0in1 PBout(1)
@@ -25,14 +25,14 @@ void Motor1Init(void);
 void Motor2Init(void);
 void Motor3Init(void);
 void MotorInit(void);
-void Motor0Run(void);
-void Motor0RunRV(void);
-void Motor1Run(void);
-void Motor1RunRV(void);
-void Motor2Run(void);
-void Motor2RunRV(void);
-void Motor3Run(void);
-void Motor3RunRV(void);
+void Motor0Run(u8 pwm);
+void Motor0RunRV(u8 pwm);
+void Motor1Run(u8 pwm);
+void Motor1RunRV(u8 pwm);
+void Motor2Run(u8 pwm);
+void Motor2RunRV(u8 pwm);
+void Motor3Run(u8 pwm);
+void Motor3RunRV(u8 pwm);
 void MotorSelfCheck(void);
 void AllBrake(void);
 #endif

@@ -1,6 +1,7 @@
 ..\obj\move.o: ..\HARDWARE\move.c
 ..\obj\move.o: ..\HARDWARE\move.h
 ..\obj\move.o: ..\HARDWARE\motor.h
+..\obj\move.o: ..\SYSTEM\sys\sys.h
 ..\obj\move.o: ..\Project\stm32f10x.h
 ..\obj\move.o: ..\CORE\core_cm3.h
 ..\obj\move.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\stdint.h
@@ -30,5 +31,5 @@
 ..\obj\move.o: ..\STM32F10x_FWLib\inc\stm32f10x_usart.h
 ..\obj\move.o: ..\STM32F10x_FWLib\inc\stm32f10x_wwdg.h
 ..\obj\move.o: ..\STM32F10x_FWLib\inc\misc.h
-..\obj\move.o: ..\SYSTEM\sys\sys.h
 ..\obj\move.o: ..\SYSTEM\delay\delay.h
+..\obj\move.o: ..\HARDWARE\pwm.h

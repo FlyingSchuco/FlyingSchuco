@@ -29,6 +29,7 @@
 "..\obj\usart.o"
 "..\obj\motor.o"
 "..\obj\move.o"
+"..\obj\pwm.o"
 "..\obj\main.o"
 "..\obj\stm32f10x_it.o"
 "..\obj\system_stm32f10x.o"
