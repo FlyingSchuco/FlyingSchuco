@@ -6,8 +6,5 @@ int main()
 {
 	delay_init();
 	MotorInit();
-	while(1)
-	{
-		MotorSelfCheck();
-	}
+
 }
