@@ -5,7 +5,6 @@
 "hal_f4\stm32f4xx_hal_msp.o"
 "hal_f4\stm32f4xx_hal_tim.o"
 "hal_f4\stm32f4xx_hal_tim_ex.o"
-"hal_f4\stm32f4xx_hal_uart.o"
 "hal_f4\stm32f4xx_hal_rcc.o"
 "hal_f4\stm32f4xx_hal_rcc_ex.o"
 "hal_f4\stm32f4xx_hal_flash.o"
@@ -19,8 +18,12 @@
 "hal_f4\stm32f4xx_hal_cortex.o"
 "hal_f4\stm32f4xx_hal.o"
 "hal_f4\stm32f4xx_hal_exti.o"
+"hal_f4\stm32f4xx_hal_uart.o"
 "hal_f4\system_stm32f4xx.o"
 "hal_f4\decode.o"
+"hal_f4\delay.o"
+"hal_f4\pid.o"
+"hal_f4\stepper.o"
 --library_type=microlib --strict --scatter "HAL_F4\HAL_F4.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

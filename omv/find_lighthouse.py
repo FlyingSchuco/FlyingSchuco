@@ -89,6 +89,7 @@ while(True):
                 uart.write('F')
                 print('Fake Target')
     else:
+        uart.write('F')
         era = [0,0,320,240]
         print('Target Lost')
     #print(clock.fps()) # Note: Your OpenMV Cam runs about half as fast while
