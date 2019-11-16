@@ -39,3 +39,4 @@ hal_f4\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\ctype.h
 hal_f4\main.o: .\User\stepper.h
 hal_f4\main.o: .\User\delay.h
 hal_f4\main.o: .\User\pid.h
+hal_f4\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\math.h

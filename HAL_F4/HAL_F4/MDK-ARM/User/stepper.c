@@ -13,8 +13,10 @@ Stepper *StepperInit(GPIO_TypeDef* STP_GPIOx,uint16_t STP_GPIO_Pin,GPIO_TypeDef*
 }
 void StepperRun(Stepper *StepperNum,int speed,int dir)
 {
-	int HalfPulseWidth = (int)112500/speed; // 900*1000/8/speed us
-	if(dir == 1) 
+	int HalfPulseWidth = 0;
+	if(speed) HalfPulseWidth = (int)112500/speed; // 900*1000/8/speed us
+	else return ;
+	if(dir == LEFT) 
 	{
 		StepperNum->pos += 1.8/8;
 		HAL_GPIO_WritePin(StepperNum->DIR_GPIOx,StepperNum->DIR_GPIO_Pin,GPIO_PIN_RESET);
@@ -23,7 +25,7 @@ void StepperRun(Stepper *StepperNum,int speed,int dir)
 		HAL_GPIO_WritePin(StepperNum->STP_GPIOx,StepperNum->STP_GPIO_Pin,GPIO_PIN_RESET);
 		gen_delay_us(HalfPulseWidth,StepperNum->htimx);
 	}
-	else if(dir == -1)
+	else if(dir == RIGHT)
 	{
 		StepperNum->pos -= 1.8/8;
 		HAL_GPIO_WritePin(StepperNum->DIR_GPIOx,StepperNum->DIR_GPIO_Pin,GPIO_PIN_SET);

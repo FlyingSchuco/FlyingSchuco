@@ -100,7 +100,7 @@ int main(void)
   /* USER CODE BEGIN Init */
 	uint8_t Receive_Buffer[15];
 	Stepper* FrontSteppper = StepperInit(GPIOD,GPIO_PIN_0,GPIOD,GPIO_PIN_1,&htim14);
-	PID_Data *StepperPID = PID_Init(0,0.8,0.01,0.8);
+	PID_Data *StepperPID = PID_Init(0,0.8,0.01,0.8,3);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -121,7 +121,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+  while(1)
   {
 	HAL_UART_Receive(&huart1,(uint8_t*)Receive_Buffer,15,10);
 	int *property = (int *)malloc(sizeof(int)*2);
@@ -129,6 +129,7 @@ int main(void)
 	{
 		int err_x = property[0];
 		int speed = abs((int)CMN_PID(StepperPID,err_x));
+		printf("speed = %d\r\n",speed);
 		if(err_x<0)
 		{
 			StepperRun(FrontSteppper,speed,LEFT);
@@ -137,9 +138,9 @@ int main(void)
 		{
 			StepperRun(FrontSteppper,speed,RIGHT);
 		}
-	}	
+	}		
 	free(property);
-    /* USER CODE END WHILE */
+	  /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }

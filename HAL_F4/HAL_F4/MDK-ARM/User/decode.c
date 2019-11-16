@@ -4,8 +4,8 @@ int decode(char *buffer, int *output)
 	int len = strlen(buffer);
 	int i = 0;
 	int delta_x = 0, delta_y = 0;
-	printf("len = %d\r\n",len);
-	printf("content = %s\r\n",buffer);
+	//printf("len = %d\r\n",len);
+	//printf("content = %s\r\n",buffer);
 	if(len)
 	{
 		if(buffer[0] == 'T')
