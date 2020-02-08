@@ -22,16 +22,25 @@ Dialog DLL:      TCM.DLL V1.14.14.0
  
 <h2>Project:</h2>
 C:\Users\vicru\Desktop\Schuco\FlyingSchuco\HAL_F4\HAL_F4\MDK-ARM\HAL_F4.uvprojx
-Project File Date:  10/27/2019
+Project File Date:  01/16/2020
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 3 (build 300)', folder: 'D:\Install\Keil_v5\ARM\ARMCC\Bin'
 Build target 'HAL_F4'
+compiling opticalFlow.c...
+"no source": Error:  #219: error while deleting file "hal_f4\opticalflow_1.d": Permission denied
+User\opticalFlow.c: 0 warnings, 1 error
+compiling opticalFlow.c...
 compiling main.c...
+../Src/main.c(105): warning:  #177-D: variable "Receive_Buffer" was declared but never referenced
+  	uint8_t Receive_Buffer[15];
+../Src/main.c: 1 warning, 0 errors
 linking...
-Program Size: Code=6516 RO-data=448 RW-data=28 ZI-data=1732  
+HAL_F4\HAL_F4.axf: Warning: L6304W: Duplicate input file hal_f4\opticalflow_1.o ignored.
+Program Size: Code=6788 RO-data=448 RW-data=20 ZI-data=1372  
+Finished: 0 information, 1 warning and 0 error messages.
 FromELF: creating hex file...
-"HAL_F4\HAL_F4.axf" - 0 Error(s), 0 Warning(s).
+"HAL_F4\HAL_F4.axf" - 0 Error(s), 2 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -49,7 +58,7 @@ Package Vendor: ARM
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:4.3.0
-Build Time Elapsed:  00:00:03
+Build Time Elapsed:  00:00:05
 </pre>
 </body>
 </html>

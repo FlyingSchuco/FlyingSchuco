@@ -28,6 +28,7 @@
 #include "decode.h"
 #include "stepper.h"
 #include "pid.h"
+#include "opticalFlow.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,6 +46,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+SPI_HandleTypeDef hspi3;
+
 TIM_HandleTypeDef htim14;
 
 UART_HandleTypeDef huart1;
@@ -60,6 +63,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM14_Init(void);
+static void MX_SPI3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -68,15 +72,15 @@ static void MX_TIM14_Init(void);
 /* USER CODE BEGIN 0 */
 int fputc(int c, FILE *stream)
 {
-    USART2->DR = c;//将c赋给串口1的DR寄存器，即重定向到串口，也可以是其他的接�?
-    while(!(USART2->SR & (1 << 7)));//等待数据发�?�完�?
+    USART1->DR = c;//将c赋给串口1的DR寄存器，即重定向到串口，也可以是其他的接�?
+    while(!(USART1->SR & (1 << 7)));//等待数据发�?�完�?
     return c;
 }
 
 int fgetc(FILE *stream)
 {
-    while(!(USART2->SR & (1 << 5)));//等待数据接收完成
-    return USART2->DR;
+    while(!(USART1->SR & (1 << 5)));//等待数据接收完成
+    return USART1->DR;
 }
 
 /* USER CODE END 0 */
@@ -99,8 +103,6 @@ int main(void)
 
   /* USER CODE BEGIN Init */
 	uint8_t Receive_Buffer[15];
-	Stepper* FrontSteppper = StepperInit(GPIOD,GPIO_PIN_0,GPIOD,GPIO_PIN_1,&htim14);
-	PID_Data *StepperPID = PID_Init(0,0.8,0.01,0.8,3);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -115,6 +117,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM14_Init();
+  MX_SPI3_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -123,24 +126,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while(1)
   {
-	HAL_UART_Receive(&huart1,(uint8_t*)Receive_Buffer,15,10);
-	int *property = (int *)malloc(sizeof(int)*2);
-	if(decode((char*)Receive_Buffer,property))
-	{
-		int err_x = property[0];
-		int speed = abs((int)CMN_PID(StepperPID,err_x));
-		printf("speed = %d\r\n",speed);
-		if(err_x<0)
-		{
-			StepperRun(FrontSteppper,speed,LEFT);
-		}
-		else 
-		{
-			StepperRun(FrontSteppper,speed,RIGHT);
-		}
-	}		
-	free(property);
-	  /* USER CODE END WHILE */
+	  printf("state = %x\r\n",read_register(Motion));
+	  printf("deltaX = %x\r\n",read_register(DX));
+	  printf("deltaY = %x\r\n",read_register(DY));
+	  HAL_Delay(1000);
+    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
@@ -191,6 +181,44 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief SPI3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI3_Init(void)
+{
+
+  /* USER CODE BEGIN SPI3_Init 0 */
+
+  /* USER CODE END SPI3_Init 0 */
+
+  /* USER CODE BEGIN SPI3_Init 1 */
+
+  /* USER CODE END SPI3_Init 1 */
+  /* SPI3 parameter configuration*/
+  hspi3.Instance = SPI3;
+  hspi3.Init.Mode = SPI_MODE_MASTER;
+  hspi3.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi3.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi3.Init.CLKPolarity = SPI_POLARITY_HIGH;
+  hspi3.Init.CLKPhase = SPI_PHASE_2EDGE;
+  hspi3.Init.NSS = SPI_NSS_SOFT;
+  hspi3.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi3.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi3.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi3.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi3.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI3_Init 2 */
+
+  /* USER CODE END SPI3_Init 2 */
+
+}
+
+/**
   * @brief TIM14 Initialization Function
   * @param None
   * @retval None
@@ -237,7 +265,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 9600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -297,11 +325,23 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PD0 PD1 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
@@ -315,6 +355,27 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM2 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM2) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
