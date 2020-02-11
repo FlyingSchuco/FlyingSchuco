@@ -66,6 +66,10 @@ void Error_Handler(void);
 #define P4_GPIO_Port GPIOA
 #define P5_Pin GPIO_PIN_3
 #define P5_GPIO_Port GPIOA
+#define OPTF_RST_Pin GPIO_PIN_9
+#define OPTF_RST_GPIO_Port GPIOC
+#define SPI_NCS_Pin GPIO_PIN_8
+#define SPI_NCS_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -24,13 +24,16 @@ hal_f1\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_cortex.h
 hal_f1\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash.h
 hal_f1\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_flash_ex.h
 hal_f1\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
+hal_f1\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h
 hal_f1\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 hal_f1\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 hal_f1\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
-hal_f1\main.o: .\User\pid.h
 hal_f1\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+hal_f1\main.o: .\User\pid.h
 hal_f1\main.o: .\User\delay.h
 hal_f1\main.o: .\User\stepper.h
 hal_f1\main.o: .\User\comm.h
 hal_f1\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 hal_f1\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+hal_f1\main.o: .\User\opticalFlow.h
+hal_f1\main.o: .\User\srom.h

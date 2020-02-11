@@ -17,11 +17,14 @@
 "hal_f1\stm32f1xx_hal_flash_ex.o"
 "hal_f1\stm32f1xx_hal_exti.o"
 "hal_f1\stm32f1xx_hal_uart.o"
+"hal_f1\stm32f1xx_hal_spi.o"
 "hal_f1\system_stm32f1xx.o"
 "hal_f1\stepper.o"
 "hal_f1\delay.o"
 "hal_f1\comm.o"
 "hal_f1\pid.o"
+"hal_f1\opticalflow.o"
+"hal_f1\srom.o"
 --library_type=microlib --strict --scatter "HAL_F1\HAL_F1.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
