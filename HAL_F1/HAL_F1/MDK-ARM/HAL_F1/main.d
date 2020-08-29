@@ -37,3 +37,4 @@ hal_f1\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 hal_f1\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 hal_f1\main.o: .\User\opticalFlow.h
 hal_f1\main.o: .\User\srom.h
+hal_f1\main.o: .\User\lcd.h

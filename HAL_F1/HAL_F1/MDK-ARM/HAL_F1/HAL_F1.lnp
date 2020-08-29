@@ -25,6 +25,7 @@
 "hal_f1\pid.o"
 "hal_f1\opticalflow.o"
 "hal_f1\srom.o"
+"hal_f1\lcd.o"
 --library_type=microlib --strict --scatter "HAL_F1\HAL_F1.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

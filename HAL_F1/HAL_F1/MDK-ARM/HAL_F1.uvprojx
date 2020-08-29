@@ -529,6 +529,11 @@
               <FileType>1</FileType>
               <FilePath>.\User\srom.c</FilePath>
             </File>
+            <File>
+              <FileName>lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\lcd.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

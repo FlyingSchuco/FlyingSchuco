@@ -30,6 +30,7 @@
 #include "stepper.h"
 #include "comm.h"
 #include "opticalFlow.h"
+#include "lcd.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -125,15 +126,58 @@ int main(void)
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&IRQBuffer, 1);
 	OpticalFlowInit();
 	BurstData *ReadData = (BurstData *)malloc(sizeof(BurstData));
+	LCD_Init();
+	double dx_acu=0.0,dy_acu=0.0;
+	//double kx = 1.0, ky = 1.0;
+	int x=0,y=0;
+	char output[100];
+	int mode = 1;
+	HAL_Delay(2000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	GetOneFrame(FrameCap);
-	  for(int i=0;i<900;++i) printf("%d:%d\n",i,(int)FrameCap[i]);
-	  HAL_Delay(2000);
+	  HAL_Delay(10);/*
+	  if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_5)==0)
+	  {
+		  mode = -mode;
+		  LCD_Clear(0XFFFF);
+	  }
+	  */
+	  if(mode == 1)
+	  {
+	  GetOneFrame(FrameCap);
+	  //LCD_Clear(0XFFFF);
+	  for(int i=0;i<30;++i) 
+	  {
+		  for(int j=0;j<30;++j)
+		  {
+			  uint16_t color = FrameCap[30*i+j]>>1;
+			  uint16_t pixel = color<<11|color<<6|color;
+			  LCD_Fill(60+4*j,100+4*i,64+4*j,104+4*i,pixel);
+		  }
+	  }
+	  HAL_Delay(30);
+	}
+	else
+	{		
+	  //LCD_ShowString(30,40,200,24,24,"Mini STM32 ^_^");	
+	  BurstRead(ReadData);
+	  if((ReadData->_Motion)>>7 == 1)
+	  {
+		  dx_acu += ((int8_t)ReadData->_DeltaX)*0.0548869;
+		  dy_acu += ((int8_t)ReadData->_DeltaY)*0.0548869;
+		  x+=(int8_t)ReadData->_DeltaX;
+		  y+=(int8_t)ReadData->_DeltaY;
+		  sprintf(output,"delta_x = %6d delta_y = %6d\n",x,y);
+		  LCD_ShowString(20,40,200,72,24,output);
+		  //LCD_ShowNum(40,40,x,5,24);
+		  //LCD_ShowNum(40,80,y,5,24);
+	  }
+  }	  
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -354,12 +398,23 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, DIR_Pin|STP_Pin|OPTF_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, DIR_Pin|STP_Pin|GPIO_PIN_6|GPIO_PIN_7 
+                          |GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_10 
+                          |GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14 
+                          |GPIO_PIN_15|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5 
+                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SPI_NCS_GPIO_Port, SPI_NCS_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(OPTF_RST_GPIO_Port, OPTF_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : DIR_Pin STP_Pin */
   GPIO_InitStruct.Pin = DIR_Pin|STP_Pin;
@@ -368,12 +423,33 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : OPTF_RST_Pin */
-  GPIO_InitStruct.Pin = OPTF_RST_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  /*Configure GPIO pin : KEY0_Pin */
+  GPIO_InitStruct.Pin = KEY0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(OPTF_RST_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(KEY0_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB0 PB1 PB2 PB10 
+                           PB11 PB12 PB13 PB14 
+                           PB15 PB3 PB4 PB5 
+                           PB6 PB7 PB8 PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_10 
+                          |GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14 
+                          |GPIO_PIN_15|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5 
+                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PC6 PC7 PC8 PC9 
+                           PC10 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9 
+                          |GPIO_PIN_10;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SPI_NCS_Pin */
   GPIO_InitStruct.Pin = SPI_NCS_Pin;
@@ -381,6 +457,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(SPI_NCS_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : OPTF_RST_Pin */
+  GPIO_InitStruct.Pin = OPTF_RST_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(OPTF_RST_GPIO_Port, &GPIO_InitStruct);
 
 }
 
