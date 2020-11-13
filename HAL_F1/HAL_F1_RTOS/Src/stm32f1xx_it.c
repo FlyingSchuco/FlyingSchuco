@@ -64,7 +64,6 @@
 /* External variables --------------------------------------------------------*/
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
-extern TIM_HandleTypeDef htim5;
 extern UART_HandleTypeDef huart2;
 extern TIM_HandleTypeDef htim1;
 
@@ -223,7 +222,7 @@ void TIM3_IRQHandler(void)
 		{
 			vTaskNotifyGiveFromISR(RBSpeedHandle,&xHigherPriotityTaskWoken);
 		}
-	}
+	} 
 	
 	portYIELD_FROM_ISR(xHigherPriotityTaskWoken);
 	
@@ -260,28 +259,6 @@ void USART2_IRQHandler(void)
   /* USER CODE BEGIN USART2_IRQn 1 */
 	
   /* USER CODE END USART2_IRQn 1 */
-}
-
-/**
-  * @brief This function handles TIM5 global interrupt.
-  */
-void TIM5_IRQHandler(void)
-{
-  /* USER CODE BEGIN TIM5_IRQn 0 */
-	BaseType_t xHigherPriotityTaskWoken = pdFALSE;
-	if (__HAL_TIM_GET_FLAG(&htim5, TIM_FLAG_CC1) != RESET)
-	{
-		if (__HAL_TIM_GET_IT_SOURCE(&htim5, TIM_IT_CC1) != RESET)
-		{
-			vTaskNotifyGiveFromISR(LFSpeedHandle,&xHigherPriotityTaskWoken);
-		}
-	}
-	portYIELD_FROM_ISR(xHigherPriotityTaskWoken);
-  /* USER CODE END TIM5_IRQn 0 */
-  HAL_TIM_IRQHandler(&htim5);
-  /* USER CODE BEGIN TIM5_IRQn 1 */
-
-  /* USER CODE END TIM5_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

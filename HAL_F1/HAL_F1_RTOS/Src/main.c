@@ -36,6 +36,10 @@
 #include "oled.h"
 #include "bsp.h"
 #include "it.h"
+#include "motor.h"
+#include "mpu.h"
+#include "inv_mpu.h"
+#include "inv_mpu_dmp_motion_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +65,6 @@ SPI_HandleTypeDef hspi1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
-TIM_HandleTypeDef htim5;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -79,6 +82,12 @@ extern Motor *motorLF;
 extern Motor *motorLB;
 extern Motor *motorRF;
 extern Motor *motorRB;
+extern MotionState *MyRob;
+
+uint8_t IRQBuffer;
+ProtocolData *RxData;
+PID_Typedef *PID_Front;
+Stepper *StepperFront;
 
 /* USER CODE END PV */
 
@@ -91,7 +100,6 @@ static void MX_USART1_UART_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM4_Init(void);
-static void MX_TIM5_Init(void);
 static void MX_I2C1_Init(void);
 void StartDefaultTask(void *argument);
 void StartLFSpeed(void *argument);
@@ -108,11 +116,7 @@ void StartIMUData(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
- uint8_t IRQBuffer;
- UART_HandleTypeDef huart1,huart2;
- ProtocolData *RxData;
- PID_Typedef *PID_Front; 
- Stepper *StepperFront;
+
 /* USER CODE END 0 */
 
 /**
@@ -143,6 +147,7 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  MX_I2C1_Init();
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_TIM3_Init();
@@ -150,10 +155,11 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM2_Init();
   MX_TIM4_Init();
-  MX_TIM5_Init();
-  MX_I2C1_Init();
+  
+  
   /* USER CODE BEGIN 2 */
-	BSP_Init();
+
+BSP_Init();
   /* USER CODE END 2 */
 
   osKernelInitialize();
@@ -235,7 +241,7 @@ int main(void)
   const osThreadAttr_t IMUData_attributes = {
     .name = "IMUData",
     .priority = (osPriority_t) osPriorityNormal,
-    .stack_size = 256
+    .stack_size = 512
   };
   IMUDataHandle = osThreadNew(StartIMUData, NULL, &IMUData_attributes);
 
@@ -567,51 +573,6 @@ static void MX_TIM4_Init(void)
 }
 
 /**
-  * @brief TIM5 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM5_Init(void)
-{
-
-  /* USER CODE BEGIN TIM5_Init 0 */
-
-  /* USER CODE END TIM5_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  /* USER CODE BEGIN TIM5_Init 1 */
-
-  /* USER CODE END TIM5_Init 1 */
-  htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 71;
-  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 100;
-  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim5, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM5_Init 2 */
-
-  /* USER CODE END TIM5_Init 2 */
-
-}
-
-/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -918,12 +879,12 @@ void StartMoveControl(void *argument)
 		  pwmRF = (int)PID_Calc(RF_PID, ABS(motorRF->TargetSpeed), motorRF->Speed);
 		  pwmRB = (int)PID_Calc(RB_PID, ABS(motorRB->TargetSpeed), motorRB->Speed);
 			  
-		  
+		  /*
 		  printf("%d,%d,%d,%d,%d\n",
 			  count,
 			  motorLF->Speed,motorLB->Speed,
 			  motorRF->Speed,motorRB->Speed);
-		  
+		  */
 		  
 		  MotorRunToTarget(motorLF, pwmLF); 
 		  MotorRunToTarget(motorLB, pwmLB); 
@@ -948,26 +909,25 @@ void StartMoveControl(void *argument)
 void StartDecision(void *argument)
 {
   /* USER CODE BEGIN StartDecision */
+	PID_Typedef *OMG_PID = PID_Init(POSITION,0.08,0,0.5,2,24,-24);
 	float vx = 0,vy = 0,omega = 0;
 	float L = 17, R = 8;
+	int count = 0;
   /* Infinite loop */
   for(;;)
   {
 	  //正式
-	  
-	 vx = 0, vy = 0, omega = 0;
+	  count++;
+	  vx = 0, vy = 0;
+	  omega = PID_Calc(OMG_PID,0,MyRob->yaw);
+	  printf("%d,%f\n",count,MyRob->yaw);
+
 	  motorLF->TargetSpeed = (int)((-vx	-vy	-omega*L)/R * (30/Pi));
 	  motorLB->TargetSpeed = (int)((-vx	+vy	-omega*L)/R * (30/Pi));
 	  motorRF->TargetSpeed = (int)((+vx	-vy	-omega*L)/R * (30/Pi));
 	  motorRB->TargetSpeed = (int)((+vx	+vy	-omega*L)/R * (30/Pi));
-    osDelay(4000);
+    osDelay(10);
 	  
-	 vx = 0, vy = 0, omega = 0;
-	  motorLF->TargetSpeed = (int)((-vx	-vy	-omega*L)/R * (30/Pi));
-	  motorLB->TargetSpeed = (int)((-vx	+vy	-omega*L)/R * (30/Pi));
-	  motorRF->TargetSpeed = (int)((+vx	-vy	-omega*L)/R * (30/Pi));
-	  motorRB->TargetSpeed = (int)((+vx	+vy	-omega*L)/R * (30/Pi));
-    osDelay(1000);
 	 
 	  //测试
 	  /*
@@ -989,10 +949,32 @@ void StartDecision(void *argument)
 void StartIMUData(void *argument)
 {
   /* USER CODE BEGIN StartIMUData */
+	float pitch = 0,roll = 0,yaw = 0; 		
+	short aacx = 0,aacy = 0,aacz = 0;		
+	short gyrox = 0,gyroy = 0,gyroz= 0;	
+	short temp = 0;					
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  taskENTER_CRITICAL();
+	if(mpu_dmp_get_data(&pitch,&roll,&yaw)==0)
+		{
+			temp = MPU_Get_Temperature();	
+			MPU_Get_Accelerometer(&aacx,&aacy,&aacz);	
+			MPU_Get_Gyroscope(&gyrox,&gyroy,&gyroz);	
+			MyRob->aacx = aacx;
+			MyRob->aacy = -aacy;
+			MyRob->aacz = -aacz;
+			MyRob->gyrox = gyrox;
+			MyRob->gyroy = -gyroy;
+			MyRob->gyroz = -gyroz;
+			MyRob->roll = roll;
+			MyRob->pitch = -pitch;
+			MyRob->yaw = -yaw;
+			MyRob->temp = temp; 
+		}
+		taskEXIT_CRITICAL();
+    osDelay(5);
   }
   /* USER CODE END StartIMUData */
 }

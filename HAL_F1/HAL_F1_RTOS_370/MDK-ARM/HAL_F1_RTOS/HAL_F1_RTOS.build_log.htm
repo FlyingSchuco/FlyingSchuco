@@ -1,0 +1,100 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: ¦ÌVision V5.21.1.0
+Copyright (C) 2016 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: TONY STARK, VICTECH, LIC=DSNNN-YYMXZ-WIN5K-Z6QC7-VTY5F-UR3IK
+ 
+Tool Versions:
+Toolchain:       MDK-ARM Professional  Version: 5.21a
+Toolchain Path:  D:\Install\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 3 (build 300)
+Assembler:       Armasm.exe V5.06 update 3 (build 300)
+Linker/Locator:  ArmLink.exe V5.06 update 3 (build 300)
+Library Manager: ArmAr.exe V5.06 update 3 (build 300)
+Hex Converter:   FromElf.exe V5.06 update 3 (build 300)
+CPU DLL:         SARMCM3.DLL V5.21a
+Dialog DLL:      DCM.DLL V1.13.8.0
+Target DLL:      Segger\JL2CM3.dll V2.99.23.0
+Dialog DLL:      TCM.DLL V1.14.14.0
+ 
+<h2>Project:</h2>
+C:\Users\vicru\Desktop\Schuco\FlyingSchuco\HAL_F1\HAL_F1_RTOS_370\MDK-ARM\HAL_F1_RTOS.uvprojx
+Project File Date:  09/13/2020
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 3 (build 300)', folder: 'D:\Install\Keil_v5\ARM\ARMCC\Bin'
+Build target 'HAL_F1_RTOS'
+compiling main.c...
+../Src/main.c(864): warning:  #177-D: variable "pwmLF" was declared but never referenced
+  	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
+../Src/main.c(864): warning:  #177-D: variable "pwmLB" was declared but never referenced
+  	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
+../Src/main.c(864): warning:  #177-D: variable "pwmRF" was declared but never referenced
+  	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
+../Src/main.c(864): warning:  #177-D: variable "pwmRB" was declared but never referenced
+  	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
+../Src/main.c(865): warning:  #177-D: variable "flag" was declared but never referenced
+  	int flag = 0,count = 0,trans = 0;
+../Src/main.c(865): warning:  #177-D: variable "trans" was declared but never referenced
+  	int flag = 0,count = 0,trans = 0;
+../Src/main.c(916): warning:  #177-D: variable "vx" was declared but never referenced
+  	float vx = 0,vy = 0,omega = 0;
+../Src/main.c(916): warning:  #177-D: variable "vy" was declared but never referenced
+  	float vx = 0,vy = 0,omega = 0;
+../Src/main.c(916): warning:  #177-D: variable "omega" was declared but never referenced
+  	float vx = 0,vy = 0,omega = 0;
+../Src/main.c(917): warning:  #177-D: variable "L" was declared but never referenced
+  	float L = 17, R = 8;
+../Src/main.c(917): warning:  #177-D: variable "R" was declared but never referenced
+  	float L = 17, R = 8;
+../Src/main.c(918): warning:  #177-D: variable "count" was declared but never referenced
+  	int count = 0;
+../Src/main.c(956): warning:  #177-D: variable "pitch" was declared but never referenced
+  	float pitch = 0,roll = 0,yaw = 0; 		
+../Src/main.c(956): warning:  #177-D: variable "roll" was declared but never referenced
+  	float pitch = 0,roll = 0,yaw = 0; 		
+../Src/main.c(956): warning:  #177-D: variable "yaw" was declared but never referenced
+  	float pitch = 0,roll = 0,yaw = 0; 		
+../Src/main.c(957): warning:  #177-D: variable "aacx" was declared but never referenced
+  	short aacx = 0,aacy = 0,aacz = 0;		
+../Src/main.c(957): warning:  #177-D: variable "aacy" was declared but never referenced
+  	short aacx = 0,aacy = 0,aacz = 0;		
+../Src/main.c(957): warning:  #177-D: variable "aacz" was declared but never referenced
+  	short aacx = 0,aacy = 0,aacz = 0;		
+../Src/main.c(958): warning:  #177-D: variable "gyrox" was declared but never referenced
+  	short gyrox = 0,gyroy = 0,gyroz= 0;	
+../Src/main.c(958): warning:  #177-D: variable "gyroy" was declared but never referenced
+  	short gyrox = 0,gyroy = 0,gyroz= 0;	
+../Src/main.c(958): warning:  #177-D: variable "gyroz" was declared but never referenced
+  	short gyrox = 0,gyroy = 0,gyroz= 0;	
+../Src/main.c(959): warning:  #177-D: variable "temp" was declared but never referenced
+  	short temp = 0;					
+../Src/main.c: 22 warnings, 0 errors
+linking...
+Program Size: Code=25708 RO-data=724 RW-data=220 ZI-data=21380  
+FromELF: creating hex file...
+"HAL_F1_RTOS\HAL_F1_RTOS.axf" - 0 Error(s), 22 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.4.5.0.pack
+                ARM::CMSIS:CORE:4.3.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 4.3.0
+
+<h2>Collection of Component include folders:</h2>
+  C:\Users\vicru\Desktop\Schuco\FlyingSchuco\HAL_F1\HAL_F1_RTOS_370\MDK-ARM\RTE
+  D:\Install\Keil_v5\ARM\PACK\ARM\CMSIS\4.5.0\CMSIS\Include
+  D:\Install\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:4.3.0
+Build Time Elapsed:  00:00:02
+</pre>
+</body>
+</html>

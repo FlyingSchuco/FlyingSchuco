@@ -1,11 +1,25 @@
 #include "bsp.h"
+MotionState *MyRob;
 Motor *motorLF, *motorLB, *motorRF, *motorRB;
-void BSP_Init()
+void BSP_Init(void)
 {
 	//
 	OLED_Init();
 	OLED_Print(0, 0, "LF  LB  RF  RB",TYPE16X16,TYPE8X16);
-
+	
+	//
+	
+	printf("MPU6050 TEST\r\n");
+    while(mpu_dmp_init())//MPU DMP初始化
+	{
+	    printf("MPU6050 Error!!!\r\n");
+		HAL_Delay(500);
+	}
+    printf("MPU6050 OK\r\n");
+	
+	//
+	MyRob = MotionStateInit();
+	
 	//
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
 	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
@@ -17,7 +31,7 @@ void BSP_Init()
 	HAL_TIM_IC_Start_IT(&htim3,TIM_CHANNEL_2);
 	HAL_TIM_IC_Start_IT(&htim3,TIM_CHANNEL_3);
 	HAL_TIM_IC_Start_IT(&htim3,TIM_CHANNEL_4);
-	//HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_1);
+	
 	
 	
 	motorLF = MotorInit(GPIOC,GPIO_PIN_11,
