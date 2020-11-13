@@ -63,8 +63,15 @@ TIM_HandleTypeDef htim14;
 
 osThreadId_t defaultTaskHandle;
 osThreadId_t IMUDataHandle;
+osThreadId_t wheelControlHandle;
+osThreadId_t wheelSpeedHandle;
 /* USER CODE BEGIN PV */
 extern MotionState *MyRob;
+extern Motor *motorLF;
+extern Motor *motorLB;
+extern Motor *motorRF;
+extern Motor *motorRB;
+
 /*
 extern unsigned char flagAC;	//
 extern unsigned char flagOG;	//
@@ -89,6 +96,8 @@ static void MX_TIM9_Init(void);
 static void MX_TIM12_Init(void);
 void StartDefaultTask(void *argument);
 void StartIMUData(void *argument);
+void StartWheelControl(void *argument);
+void StartWheelSpeed(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -162,7 +171,7 @@ int main(void)
   /* definition and creation of defaultTask */
   const osThreadAttr_t defaultTask_attributes = {
     .name = "defaultTask",
-    .priority = (osPriority_t) osPriorityNormal,
+    .priority = (osPriority_t) osPriorityLow,
     .stack_size = 128
   };
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
@@ -174,6 +183,22 @@ int main(void)
     .stack_size = 512
   };
   IMUDataHandle = osThreadNew(StartIMUData, NULL, &IMUData_attributes);
+
+  /* definition and creation of wheelControl */
+  const osThreadAttr_t wheelControl_attributes = {
+    .name = "wheelControl",
+    .priority = (osPriority_t) osPriorityNormal,
+    .stack_size = 1024
+  };
+  wheelControlHandle = osThreadNew(StartWheelControl, NULL, &wheelControl_attributes);
+
+  /* definition and creation of wheelSpeed */
+  const osThreadAttr_t wheelSpeed_attributes = {
+    .name = "wheelSpeed",
+    .priority = (osPriority_t) osPriorityHigh,
+    .stack_size = 512
+  };
+  wheelSpeedHandle = osThreadNew(StartWheelSpeed, NULL, &wheelSpeed_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -720,33 +745,6 @@ void StartIMUData(void *argument)
   for(;;)
   {
 	taskENTER_CRITICAL();
-	  /*
-	if(flagAC == 1)
-	{
-		flagAC = 0;
-		MyRob->aacx = ((short)(RX_Buf_AC[3]<<8 | RX_Buf_AC[2]))/32768.0*16;;
-		MyRob->aacy = -((short)(RX_Buf_AC[5]<<8 | RX_Buf_AC[4]))/32768.0*16;
-		MyRob->aacz = -((short)(RX_Buf_AC[7]<<8 | RX_Buf_AC[6]))/32768.0*16;
-		MyRob->temp = ((short)(RX_Buf_AC[9]<<8 | RX_Buf_AC[8]))/340.0+36.25;
-	}
-	if(flagOG == 1)
-	{
-		flagOG = 0;
-		MyRob->gyrox = ((short)(RX_Buf_OG[3]<<8| RX_Buf_OG[2]))/32768.0*2000;
-		MyRob->gyroy = -((short)(RX_Buf_OG[5]<<8| RX_Buf_OG[4]))/32768.0*2000;
-		MyRob->gyroz = -((short)(RX_Buf_OG[7]<<8| RX_Buf_OG[6]))/32768.0*2000;
-		MyRob->temp = ((short)(RX_Buf_OG[9]<<8 | RX_Buf_OG[8]))/340.0+36.25;
-	}
-	if(flagAG == 1)
-	{
-		flagAG = 0;
-		MyRob->roll = ((short)(RX_Buf_AG[3]<<8| RX_Buf_AG[2]))/32768.0*180;
-		MyRob->pitch = -((short)(RX_Buf_AG[5]<<8| RX_Buf_AG[4]))/32768.0*180;
-		MyRob->yaw = -((short)(RX_Buf_AG[7]<<8| RX_Buf_AG[6]))/32768.0*180;
-		MyRob->temp = ((short)(RX_Buf_AG[9]<<8 | RX_Buf_AG[8]))/340.0+36.25;
-	}
-	printf("pitch = %f, roll = %f, yaw = %f\n", MyRob->pitch, MyRob->yaw, MyRob->roll);
-	*/
 	if(mpu_dmp_get_data(&pitch,&roll,&yaw)==0)
 	{
 			temp = MPU_Get_Temperature();	
@@ -768,6 +766,53 @@ void StartIMUData(void *argument)
     osDelay(5);
   }
   /* USER CODE END StartIMUData */
+}
+
+/* USER CODE BEGIN Header_StartWheelControl */
+/**
+* @brief Function implementing the wheelControl thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartWheelControl */
+void StartWheelControl(void *argument)
+{
+  /* USER CODE BEGIN StartWheelControl */
+  /* Infinite loop */
+  for(;;)
+  {
+	PID_Typedef *LF_PID = PID_Init(POSITION,0.6,0.08,0.04,1,100,45);
+	PID_Typedef *LB_PID = PID_Init(POSITION,0.6,0.08,0.04,1,100,45);
+	PID_Typedef *RF_PID = PID_Init(POSITION,0.6,0.08,0.04,1,100,45);
+	PID_Typedef *RB_PID = PID_Init(POSITION,0.6,0.08,0.04,1,100,45);
+	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
+	int flag = 0,count = 0,trans = 0;
+	for(pwmLF = 40;pwmLF<100;pwmLF++)
+	{
+		MotorRun(motorLF,FW,pwmLF);
+	}
+	printf("%d,%d\n",pwmLF,motorLF->Speed);
+	osDelay(2000);
+  }
+  /* USER CODE END StartWheelControl */
+}
+
+/* USER CODE BEGIN Header_StartWheelSpeed */
+/**
+* @brief Function implementing the wheelSpeed thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartWheelSpeed */
+void StartWheelSpeed(void *argument)
+{
+  /* USER CODE BEGIN StartWheelSpeed */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartWheelSpeed */
 }
 
 /**
