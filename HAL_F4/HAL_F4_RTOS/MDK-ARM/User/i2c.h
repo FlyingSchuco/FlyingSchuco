@@ -3,6 +3,7 @@
 #define __I2C_H
 
 #include "stm32f4xx_hal.h"
+#include "delay.h"
 #include "main.h"
 
 #define GPIO_PORT_I2C	GPIOB			     // GPIO端口 

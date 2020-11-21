@@ -30,6 +30,7 @@ hal_f4_rtos\mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 hal_f4_rtos\mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 hal_f4_rtos\mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 hal_f4_rtos\mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
+hal_f4_rtos\mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 hal_f4_rtos\mpu.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 hal_f4_rtos\mpu.o: ../Inc/FreeRTOSConfig.h
 hal_f4_rtos\mpu.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
@@ -39,4 +40,5 @@ hal_f4_rtos\mpu.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_
 hal_f4_rtos\mpu.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
 hal_f4_rtos\mpu.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 hal_f4_rtos\mpu.o: User\i2c.h
+hal_f4_rtos\mpu.o: User\delay.h
 hal_f4_rtos\mpu.o: ../Inc/main.h

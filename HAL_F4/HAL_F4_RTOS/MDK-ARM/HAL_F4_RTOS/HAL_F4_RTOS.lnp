@@ -22,6 +22,8 @@
 "hal_f4_rtos\stm32f4xx_hal_i2c_ex.o"
 "hal_f4_rtos\stm32f4xx_hal_tim.o"
 "hal_f4_rtos\stm32f4xx_hal_tim_ex.o"
+"hal_f4_rtos\stm32f4xx_hal_uart.o"
+"hal_f4_rtos\stm32f4xx_hal_usart.o"
 "hal_f4_rtos\system_stm32f4xx.o"
 "hal_f4_rtos\croutine.o"
 "hal_f4_rtos\event_groups.o"
@@ -44,6 +46,11 @@
 "hal_f4_rtos\oled.o"
 "hal_f4_rtos\pid.o"
 "hal_f4_rtos\i2c.o"
+"hal_f4_rtos\decision.o"
+"hal_f4_rtos\delay.o"
+"hal_f4_rtos\ultrasonar.o"
+"hal_f4_rtos\comm.o"
+"hal_f4_rtos\stepper.o"
 --library_type=microlib --strict --scatter "HAL_F4_RTOS\HAL_F4_RTOS.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

@@ -33,6 +33,7 @@ hal_f4_rtos\inv_mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 hal_f4_rtos\inv_mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 hal_f4_rtos\inv_mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 hal_f4_rtos\inv_mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
+hal_f4_rtos\inv_mpu.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 hal_f4_rtos\inv_mpu.o: User\inv_mpu.h
 hal_f4_rtos\inv_mpu.o: User\inv_mpu_dmp_motion_driver.h
 hal_f4_rtos\inv_mpu.o: User\mpu.h
@@ -44,4 +45,5 @@ hal_f4_rtos\inv_mpu.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprec
 hal_f4_rtos\inv_mpu.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
 hal_f4_rtos\inv_mpu.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
 hal_f4_rtos\inv_mpu.o: User\i2c.h
+hal_f4_rtos\inv_mpu.o: User\delay.h
 hal_f4_rtos\inv_mpu.o: ../Inc/main.h

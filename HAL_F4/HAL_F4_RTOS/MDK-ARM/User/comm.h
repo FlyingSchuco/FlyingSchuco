@@ -4,8 +4,6 @@
 #include "stdlib.h"
 #include "string.h"
 #include "stm32f4xx_hal.h"
-#include "stepper.h"
-#include "pid.h"
 #define PTCLen 8
 #define DEBUG
 typedef enum
@@ -22,11 +20,10 @@ typedef struct
 	short dy;
 }ProtocolData;
 
-extern uint8_t IRQBuffer;
-extern UART_HandleTypeDef huart1,huart2;
+extern uint8_t FrontBuffer;
+extern UART_HandleTypeDef huart1;
 extern ProtocolData *RxData;
-extern PID_Typedef *PID_Front; 
-extern Stepper *StepperFront;
+
 /*
 openmv 通讯协议
 0x1D 0xD1 (u8)color (short)dx (short)dy 0xED

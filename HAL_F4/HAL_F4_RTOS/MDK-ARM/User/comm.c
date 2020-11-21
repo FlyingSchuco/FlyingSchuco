@@ -14,7 +14,7 @@ int fputc(int ch, FILE *f)
 
 void SerialTransmission(UART_HandleTypeDef *ToUart)
 {
-	HAL_UART_Transmit(ToUart,(uint8_t *)&IRQBuffer,1,0xFFFF);
+	HAL_UART_Transmit(ToUart,(uint8_t *)&FrontBuffer,1,0xFFFF);
 }
 
 void RxDecode(uint8_t RxBuffer[])
@@ -54,7 +54,6 @@ void RxDecode(uint8_t RxBuffer[])
 	#ifdef DEBUG
 		printf("%d\n",RxData->dx);
 	#endif
-	StepperAutoRotate(StepperFront,PID_Calc(PID_Front,0,RxData->dx));
 }
 
 void RxConfirm(uint8_t Data)
@@ -117,8 +116,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	SerialTransmission(&huart1);
 	#else
 	//解析数据
-	RxConfirm(IRQBuffer);
+	RxConfirm(FrontBuffer);
 	#endif
-	HAL_UART_Receive_IT(&huart2, (uint8_t *)&IRQBuffer, 1);   //再开启接收中断
+	HAL_UART_Receive_IT(&huart1, (uint8_t *)&FrontBuffer, 1);   //再开启接收中断
 }
 

@@ -6,6 +6,8 @@
 #include "cmsis_os.h"
 #include "oled.h"
 #include "string.h"
-
-
+#include "ultraSonar.h"
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
+extern TIM_HandleTypeDef htim6;
+extern Sonar *sonarF;
 #endif 

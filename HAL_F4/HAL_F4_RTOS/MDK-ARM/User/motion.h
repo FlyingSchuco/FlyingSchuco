@@ -7,6 +7,8 @@
 右朝向为机体y轴正方向，
 指向地面为机体z轴正方向，
 omega俯视顺时针为正方向。
+
+
 */
 
 typedef struct 
@@ -15,6 +17,12 @@ typedef struct
 	short aacx,aacy,aacz;		//加速度传感器原始数据
 	short gyrox,gyroy,gyroz;	//陀螺仪原始数据
 	short temp;					//温度
+	int x;						//地面坐标系x轴
+	int y;						//地面坐标系y轴
+	float dF;
+	float dB;
+	float dL;
+	float dR;
 }MotionState;
 MotionState *MotionStateInit(void);
 

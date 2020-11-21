@@ -1,37 +1,11 @@
 #include "motor.h"
 
-#ifdef XY160
-Motor *MotorInit(	GPIO_TypeDef *IN1,uint16_t IN1_PIN, 
-					GPIO_TypeDef *IN2,uint16_t IN2_PIN, 
-					GPIO_TypeDef *EN,uint16_t EN_PIN, 
-					GPIO_TypeDef *V_Meter, uint16_t V_Meter_PIN,
-					TIM_HandleTypeDef *TIM, uint16_t channel)
-{
-	Motor *MT;
-	MT = (Motor *)pvPortMalloc(sizeof(Motor));
-	MT->IN1.GPIO = IN1;
-	MT->IN1.PIN = IN1_PIN;
-	MT->IN2.GPIO = IN2;
-	MT->IN2.PIN = IN2_PIN;
-	MT->EN.GPIO = EN;
-	MT->EN.PIN = EN_PIN;
-	MT->V_Meter.GPIO = V_Meter;
-	MT->V_Meter.PIN = V_Meter_PIN;
-	MT->TIM = TIM;
-	MT->channel = channel;
-	MT->State = STOP;
-	MT->Speed = 0;
-	MT->PWM = 0;
-	MT->TargetSpeed = 0;
-	return MT;
-}
-#endif
 
 #ifdef MX1616
 //电机初始化函数
 Motor *MotorInit(	GPIO_TypeDef *IN1, 	uint16_t IN1_PIN, 
 					GPIO_TypeDef *IN2, 	uint16_t IN2_PIN, 
-					GPIO_TypeDef *V_Meter, 	uint16_t V_Meter_PIN,
+					TIM_HandleTypeDef *Timer_Encoder,
 					TIM_HandleTypeDef *TIMA, uint16_t channel1,
 					TIM_HandleTypeDef *TIMB, uint16_t channel2	)
 {
@@ -41,8 +15,6 @@ Motor *MotorInit(	GPIO_TypeDef *IN1, 	uint16_t IN1_PIN,
 	MT->IN1.PIN = IN1_PIN;
 	MT->IN2.GPIO = IN2;
 	MT->IN2.PIN = IN2_PIN;
-	MT->V_Meter.GPIO = V_Meter;
-	MT->V_Meter.PIN = V_Meter_PIN;
 	MT->TIMA = TIMA;
 	MT->channel1 = channel1;
 	MT->TIMB = TIMB;
@@ -51,6 +23,12 @@ Motor *MotorInit(	GPIO_TypeDef *IN1, 	uint16_t IN1_PIN,
 	MT->Speed = 0;
 	MT->PWM = 0;
 	MT->TargetSpeed = 0;
+	MT->Timer_Encoder = Timer_Encoder;
+	//输出PMW开启
+	HAL_TIM_PWM_Start(MT->TIMA,MT->channel1);
+	HAL_TIM_PWM_Start(MT->TIMB,MT->channel2);
+	//编码器模式开启
+	HAL_TIM_Encoder_Start((MT->Timer_Encoder), TIM_CHANNEL_ALL);
 	return MT;
 }
 #endif
@@ -60,24 +38,6 @@ void MotorRun(Motor *motor, MotorState state, uint32_t PWM)
 {
 	motor->PWM = PWM;
 	motor->State = state;
-	#ifdef XY160
-	__HAL_TIM_SET_COMPARE(motor->TIM, motor->channel, PWM);
-	switch(motor->State)
-	{
-		case STOP:
-			HAL_GPIO_WritePin(motor->IN1.GPIO, motor->IN1.PIN, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(motor->IN2.GPIO, motor->IN2.PIN, GPIO_PIN_RESET);
-			break;
-		case FW:
-			HAL_GPIO_WritePin(motor->IN1.GPIO, motor->IN1.PIN, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(motor->IN2.GPIO, motor->IN2.PIN, GPIO_PIN_SET);
-			break;
-		case RV:
-			HAL_GPIO_WritePin(motor->IN1.GPIO, motor->IN1.PIN, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(motor->IN2.GPIO, motor->IN2.PIN, GPIO_PIN_RESET);
-			break;
-	}
-	#endif
 	#ifdef MX1616
 	switch(motor->State)
 	{
@@ -114,24 +74,6 @@ void MotorRunToTarget(Motor *motor, uint32_t PWM)
 	{
 		motor->State = STOP;
 	}
-	#ifdef XY160
-	__HAL_TIM_SET_COMPARE(motor->TIM, motor->channel, PWM);
-	switch(motor->State)
-	{
-		case STOP:
-			HAL_GPIO_WritePin(motor->IN1.GPIO, motor->IN1.PIN, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(motor->IN2.GPIO, motor->IN2.PIN, GPIO_PIN_RESET);
-			break;
-		case FW:
-			HAL_GPIO_WritePin(motor->IN1.GPIO, motor->IN1.PIN, GPIO_PIN_RESET);
-			HAL_GPIO_WritePin(motor->IN2.GPIO, motor->IN2.PIN, GPIO_PIN_SET);
-			break;
-		case RV:
-			HAL_GPIO_WritePin(motor->IN1.GPIO, motor->IN1.PIN, GPIO_PIN_SET);
-			HAL_GPIO_WritePin(motor->IN2.GPIO, motor->IN2.PIN, GPIO_PIN_RESET);
-			break;
-	}
-	#endif
 	#ifdef MX1616
 	switch(motor->State)
 	{
@@ -150,5 +92,18 @@ void MotorRunToTarget(Motor *motor, uint32_t PWM)
 	}
 	#endif
 	return ;
+}
+
+void MotorSpeedMeasure(Motor *motor)
+{
+	motor->enc = (__HAL_TIM_GET_COUNTER((motor->Timer_Encoder)));
+	printf("enc = %d\n",motor->enc);
+	motor->Speed = motor->enc-motor->enc_old;
+	motor->enc_old=motor->enc;
+	if (motor->Speed > 2000)
+		motor->Speed -= 5000;
+	else if (motor->Speed <= -2000)
+		motor->Speed += 5000;
+	motor->Speed = (int)(fabs((float)motor->Speed)*20.0f/385.0f*60.0f);	//rpm
 }
 

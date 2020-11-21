@@ -35,6 +35,7 @@
 #include "mpu.h"
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h"
+#include "ultraSonar.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,6 +45,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define Pi 3.1416f
+#define K2 1.414f
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -56,21 +59,33 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim8;
 TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim12;
 TIM_HandleTypeDef htim14;
 
+UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
+
 osThreadId_t defaultTaskHandle;
 osThreadId_t IMUDataHandle;
 osThreadId_t wheelControlHandle;
 osThreadId_t wheelSpeedHandle;
+osThreadId_t moveDecisionHandle;
+osThreadId_t stepperControlHandle;
+osThreadId_t ultraSonarHandle;
+osThreadId_t openmvComHandle;
 /* USER CODE BEGIN PV */
-extern MotionState *MyRob;
+extern MotionState *myRob;
 extern Motor *motorLF;
 extern Motor *motorLB;
 extern Motor *motorRF;
 extern Motor *motorRB;
+extern Sonar *sonarF;
+
+float vx = 0.0f,vy = 0.0f,omega = 0.0f;
+float L = 16.0f, R = 3.0f;
 
 /*
 extern unsigned char flagAC;	//
@@ -94,10 +109,17 @@ static void MX_TIM4_Init(void);
 static void MX_TIM8_Init(void);
 static void MX_TIM9_Init(void);
 static void MX_TIM12_Init(void);
+static void MX_TIM6_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void *argument);
 void StartIMUData(void *argument);
 void StartWheelControl(void *argument);
 void StartWheelSpeed(void *argument);
+void StartDecision(void *argument);
+void StartStepperControl(void *argument);
+void StartUltraSonar(void *argument);
+void StartOpenmvCom(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -117,7 +139,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -145,6 +166,9 @@ int main(void)
   MX_TIM8_Init();
   MX_TIM9_Init();
   MX_TIM12_Init();
+  MX_TIM6_Init();
+  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 	BSP_Init();
   /* USER CODE END 2 */
@@ -179,7 +203,7 @@ int main(void)
   /* definition and creation of IMUData */
   const osThreadAttr_t IMUData_attributes = {
     .name = "IMUData",
-    .priority = (osPriority_t) osPriorityNormal,
+    .priority = (osPriority_t) osPriorityHigh,
     .stack_size = 512
   };
   IMUDataHandle = osThreadNew(StartIMUData, NULL, &IMUData_attributes);
@@ -195,10 +219,42 @@ int main(void)
   /* definition and creation of wheelSpeed */
   const osThreadAttr_t wheelSpeed_attributes = {
     .name = "wheelSpeed",
-    .priority = (osPriority_t) osPriorityHigh,
+    .priority = (osPriority_t) osPriorityNormal,
     .stack_size = 512
   };
   wheelSpeedHandle = osThreadNew(StartWheelSpeed, NULL, &wheelSpeed_attributes);
+
+  /* definition and creation of moveDecision */
+  const osThreadAttr_t moveDecision_attributes = {
+    .name = "moveDecision",
+    .priority = (osPriority_t) osPriorityAboveNormal,
+    .stack_size = 512
+  };
+  moveDecisionHandle = osThreadNew(StartDecision, NULL, &moveDecision_attributes);
+
+  /* definition and creation of stepperControl */
+  const osThreadAttr_t stepperControl_attributes = {
+    .name = "stepperControl",
+    .priority = (osPriority_t) osPriorityNormal,
+    .stack_size = 512
+  };
+  stepperControlHandle = osThreadNew(StartStepperControl, NULL, &stepperControl_attributes);
+
+  /* definition and creation of ultraSonar */
+  const osThreadAttr_t ultraSonar_attributes = {
+    .name = "ultraSonar",
+    .priority = (osPriority_t) osPriorityNormal,
+    .stack_size = 512
+  };
+  ultraSonarHandle = osThreadNew(StartUltraSonar, NULL, &ultraSonar_attributes);
+
+  /* definition and creation of openmvCom */
+  const osThreadAttr_t openmvCom_attributes = {
+    .name = "openmvCom",
+    .priority = (osPriority_t) osPriorityHigh,
+    .stack_size = 512
+  };
+  openmvComHandle = osThreadNew(StartOpenmvCom, NULL, &openmvCom_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -206,7 +262,7 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
-  
+
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
@@ -229,11 +285,11 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage 
+  /** Configure the main internal regulator output voltage
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -248,7 +304,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -282,13 +338,13 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 168-1;
+  htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 100;
+  htim1.Init.Period = 5000;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
-  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -332,12 +388,12 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 168-1;
+  htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 100;
+  htim2.Init.Period = 5000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -381,12 +437,12 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 168-1;
+  htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 100;
+  htim3.Init.Period = 5000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -430,12 +486,12 @@ static void MX_TIM4_Init(void)
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 168-1;
+  htim4.Init.Prescaler = 0;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 100;
+  htim4.Init.Period = 5000;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
@@ -461,6 +517,44 @@ static void MX_TIM4_Init(void)
 }
 
 /**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 84-1;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 65535;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
   * @brief TIM8 Initialization Function
   * @param None
   * @retval None
@@ -480,9 +574,9 @@ static void MX_TIM8_Init(void)
 
   /* USER CODE END TIM8_Init 1 */
   htim8.Instance = TIM8;
-  htim8.Init.Prescaler = 168-1;
+  htim8.Init.Prescaler = 8-1;
   htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim8.Init.Period = 100;
+  htim8.Init.Period = 1000;
   htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim8.Init.RepetitionCounter = 0;
   htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -555,9 +649,9 @@ static void MX_TIM9_Init(void)
 
   /* USER CODE END TIM9_Init 1 */
   htim9.Instance = TIM9;
-  htim9.Init.Prescaler = 168-1;
+  htim9.Init.Prescaler = 8-1;
   htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim9.Init.Period = 100;
+  htim9.Init.Period = 1000;
   htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_PWM_Init(&htim9) != HAL_OK)
@@ -601,9 +695,9 @@ static void MX_TIM12_Init(void)
 
   /* USER CODE END TIM12_Init 1 */
   htim12.Instance = TIM12;
-  htim12.Init.Prescaler = 168-1;
+  htim12.Init.Prescaler = 4-1;
   htim12.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim12.Init.Period = 100;
+  htim12.Init.Period = 1000;
   htim12.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim12.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_PWM_Init(&htim12) != HAL_OK)
@@ -645,7 +739,7 @@ static void MX_TIM14_Init(void)
 
   /* USER CODE END TIM14_Init 1 */
   htim14.Instance = TIM14;
-  htim14.Init.Prescaler = 168-1;
+  htim14.Init.Prescaler = 84-1;
   htim14.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim14.Init.Period = 65535;
   htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -657,6 +751,72 @@ static void MX_TIM14_Init(void)
   /* USER CODE BEGIN TIM14_Init 2 */
 
   /* USER CODE END TIM14_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
 
 }
 
@@ -678,23 +838,23 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SONARF_TRIG_GPIO_Port, SONARF_TRIG_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, IMU_SCL_Pin|IMU_SDA_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : PA2 PA3 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  /*Configure GPIO pin : SONARF_TRIG_Pin */
+  GPIO_InitStruct.Pin = SONARF_TRIG_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SONARF_TRIG_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA9 PA10 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  /*Configure GPIO pin : SONARF_ECHO_Pin */
+  GPIO_InitStruct.Pin = SONARF_ECHO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  HAL_GPIO_Init(SONARF_ECHO_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : IMU_SCL_Pin IMU_SDA_Pin */
   GPIO_InitStruct.Pin = IMU_SCL_Pin|IMU_SDA_Pin;
@@ -702,6 +862,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
@@ -724,7 +888,7 @@ void StartDefaultTask(void *argument)
   {
     osDelay(1);
   }
-  /* USER CODE END 5 */ 
+  /* USER CODE END 5 */
 }
 
 /* USER CODE BEGIN Header_StartIMUData */
@@ -745,23 +909,25 @@ void StartIMUData(void *argument)
   for(;;)
   {
 	taskENTER_CRITICAL();
+	  
 	if(mpu_dmp_get_data(&pitch,&roll,&yaw)==0)
 	{
 			temp = MPU_Get_Temperature();	
 			MPU_Get_Accelerometer(&aacx,&aacy,&aacz);	
 			MPU_Get_Gyroscope(&gyrox,&gyroy,&gyroz);	
-			MyRob->aacx = aacx;
-			MyRob->aacy = -aacy;
-			MyRob->aacz = -aacz;
-			MyRob->gyrox = gyrox;
-			MyRob->gyroy = -gyroy;
-			MyRob->gyroz = -gyroz;
-			MyRob->roll = roll;
-			MyRob->pitch = -pitch;
-			MyRob->yaw = -yaw;
-			MyRob->temp = temp; 
-		printf("pitch = %f, yaw = %f, roll = %f\n", MyRob->pitch, MyRob->yaw, MyRob->roll);
+			myRob->aacx = aacx;
+			myRob->aacy = -aacy;
+			myRob->aacz = -aacz;
+			myRob->gyrox = gyrox;
+			myRob->gyroy = -gyroy;
+			myRob->gyroz = -gyroz;
+			myRob->roll = roll;
+			myRob->pitch = -pitch;
+			myRob->yaw = -yaw;
+			myRob->temp = temp; 
+		//printf("pitch = %f, yaw = %f, roll = %f\n", myRob->pitch, myRob->yaw, myRob->roll);
 	}
+	  
 	taskEXIT_CRITICAL();
     osDelay(5);
   }
@@ -778,21 +944,39 @@ void StartIMUData(void *argument)
 void StartWheelControl(void *argument)
 {
   /* USER CODE BEGIN StartWheelControl */
+	PID_Typedef *LF_PID = PID_Init(POSITION,10,0,0,1,1000,0);
+	PID_Typedef *LB_PID = PID_Init(POSITION,0.6,1.2,0.2,1,1000,0);
+	PID_Typedef *RF_PID = PID_Init(POSITION,0.6,1.2,0.2,1,1000,0);
+	PID_Typedef *RB_PID = PID_Init(POSITION,0.6,1.2,0.2,1,1000,0);
+	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
   /* Infinite loop */
   for(;;)
   {
-	PID_Typedef *LF_PID = PID_Init(POSITION,0.6,0.08,0.04,1,100,45);
-	PID_Typedef *LB_PID = PID_Init(POSITION,0.6,0.08,0.04,1,100,45);
-	PID_Typedef *RF_PID = PID_Init(POSITION,0.6,0.08,0.04,1,100,45);
-	PID_Typedef *RB_PID = PID_Init(POSITION,0.6,0.08,0.04,1,100,45);
-	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
-	int flag = 0,count = 0,trans = 0;
-	for(pwmLF = 40;pwmLF<100;pwmLF++)
-	{
-		MotorRun(motorLF,FW,pwmLF);
-	}
-	printf("%d,%d\n",pwmLF,motorLF->Speed);
-	osDelay(2000);
+	  /*
+	  motorLF->TargetSpeed = (int)((-vx/K2	-vy/K2	-omega*L)/R * (30/Pi));
+	  motorLB->TargetSpeed = (int)((-vx/K2	+vy/K2	-omega*L)/R * (30/Pi));
+	  motorRF->TargetSpeed = (int)((+vx/K2	-vy/K2	-omega*L)/R * (30/Pi));
+	  motorRB->TargetSpeed = (int)((+vx/K2	+vy/K2	-omega*L)/R * (30/Pi));
+	  */
+	  
+	  motorLF->TargetSpeed = 60;
+	  motorLB->TargetSpeed = 0;
+	  motorRF->TargetSpeed = 0;
+	  motorRB->TargetSpeed = 0;
+	  
+	  taskENTER_CRITICAL();
+	  pwmLF = (int)PID_Calc(LF_PID, ABS(motorLF->TargetSpeed), motorLF->Speed);
+	  pwmLB = (int)PID_Calc(LB_PID, ABS(motorLB->TargetSpeed), motorLB->Speed);
+	  pwmRF = (int)PID_Calc(RF_PID, ABS(motorRF->TargetSpeed), motorRF->Speed);
+	  pwmRB = (int)PID_Calc(RB_PID, ABS(motorRB->TargetSpeed), motorRB->Speed);
+	  taskEXIT_CRITICAL();
+	  
+	  MotorRunToTarget(motorLF,800);
+	  MotorRunToTarget(motorLB,pwmLB);
+	  MotorRunToTarget(motorRF,pwmRF);
+	  MotorRunToTarget(motorRB,pwmRB);
+	  
+	osDelay(50);
   }
   /* USER CODE END StartWheelControl */
 }
@@ -810,9 +994,141 @@ void StartWheelSpeed(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	  //测速
+	  MotorSpeedMeasure(motorLF);
+	  MotorSpeedMeasure(motorLB);
+	  MotorSpeedMeasure(motorRF);
+	  MotorSpeedMeasure(motorRB);
+	  printf("%d,%d,%d,%d\n",motorLF->Speed,motorLB->Speed,motorRF->Speed,motorRB->Speed);
+    osDelay(50);
   }
   /* USER CODE END StartWheelSpeed */
+}
+
+/* USER CODE BEGIN Header_StartDecision */
+/**
+* @brief Function implementing the moveDecision thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartDecision */
+void StartDecision(void *argument)
+{
+  /* USER CODE BEGIN StartDecision */
+  /* Infinite loop */
+  for(;;)
+  {
+	  /*
+	  if(target->find == 0)			//没找到灯
+	  {
+		  Idle();					//按照固定线路巡航
+	  } 
+	  else if(target->find == 1)	//找到灯塔
+	  {
+		  //if(myRob->yaw) 如果角度较小，
+		  {
+			  
+		  }
+		  //else //否则调整角度，
+		  {
+			  if(myRob->dF >= 50)
+			  {
+				  
+			  }
+		  }
+	  }
+	  else 
+	  {
+		  
+	  }
+	  */
+	vx = 10.0f, vy = 0.0f;
+	omega = 0.0f;
+    osDelay(10);
+  }
+  /* USER CODE END StartDecision */
+}
+
+/* USER CODE BEGIN Header_StartStepperControl */
+/**
+* @brief Function implementing the stepperControl thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartStepperControl */
+void StartStepperControl(void *argument)
+{
+  /* USER CODE BEGIN StartStepperControl */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartStepperControl */
+}
+
+/* USER CODE BEGIN Header_StartUltraSonar */
+/**
+* @brief Function implementing the ultraSonar thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartUltraSonar */
+void StartUltraSonar(void *argument)
+{
+  /* USER CODE BEGIN StartUltraSonar */
+	float distF = 300.0f;
+  /* Infinite loop */
+  for(;;)
+  {
+	SonarTrig(sonarF);
+    osDelay(30);
+	if(sonarF->state == HAL_BUSY)
+	{
+		sonarF->state = HAL_OK;
+	}
+	else if(sonarF->state == HAL_OK)
+	{
+		if(sonarF->endTime > sonarF->startTime)
+		{
+			distF = 340.0f*(float)(+sonarF->endTime-sonarF->startTime)/2.0f/10000.0f;
+			myRob->dF = distF;
+		}
+		else if(sonarF->endTime < sonarF->startTime)
+		{
+			distF = 340.0f*(float)(0xFFFF-sonarF->startTime+sonarF->endTime)/2.0f/10000.0f;
+			myRob->dF = distF;
+		}
+		else 
+		{
+			
+		}
+	}
+	else 
+	{
+		
+	}
+	//printf("distF = %f\n",distF);
+  }
+  /* USER CODE END StartUltraSonar */
+}
+
+/* USER CODE BEGIN Header_StartOpenmvCom */
+/**
+* @brief Function implementing the openmvCom thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StartOpenmvCom */
+void StartOpenmvCom(void *argument)
+{
+  /* USER CODE BEGIN StartOpenmvCom */
+  /* Infinite loop */
+  for(;;)
+  {
+    osDelay(1);
+  }
+  /* USER CODE END StartOpenmvCom */
 }
 
 /**
@@ -857,7 +1173,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

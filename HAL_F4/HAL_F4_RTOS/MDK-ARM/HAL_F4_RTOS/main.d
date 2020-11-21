@@ -30,6 +30,7 @@ hal_f4_rtos\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 hal_f4_rtos\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 hal_f4_rtos\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 hal_f4_rtos\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
+hal_f4_rtos\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 hal_f4_rtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os.h
 hal_f4_rtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h
 hal_f4_rtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
@@ -48,9 +49,14 @@ hal_f4_rtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
 hal_f4_rtos\main.o: .\User\bsp.h
 hal_f4_rtos\main.o: .\User\motion.h
 hal_f4_rtos\main.o: .\User\motor.h
+hal_f4_rtos\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
 hal_f4_rtos\main.o: .\User\mpu.h
 hal_f4_rtos\main.o: .\User\i2c.h
+hal_f4_rtos\main.o: .\User\delay.h
 hal_f4_rtos\main.o: .\User\inv_mpu.h
 hal_f4_rtos\main.o: .\User\inv_mpu_dmp_motion_driver.h
-hal_f4_rtos\main.o: .\User\it.h
+hal_f4_rtos\main.o: .\User\ultraSonar.h
+hal_f4_rtos\main.o: .\User\stepper.h
+hal_f4_rtos\main.o: .\User\comm.h
 hal_f4_rtos\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+hal_f4_rtos\main.o: .\User\it.h

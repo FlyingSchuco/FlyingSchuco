@@ -30,6 +30,7 @@ hal_f4_rtos\it.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 hal_f4_rtos\it.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 hal_f4_rtos\it.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 hal_f4_rtos\it.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
+hal_f4_rtos\it.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 hal_f4_rtos\it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
 hal_f4_rtos\it.o: ../Inc/FreeRTOSConfig.h
 hal_f4_rtos\it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
@@ -44,3 +45,5 @@ hal_f4_rtos\it.o: ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis
 hal_f4_rtos\it.o: User\oled.h
 hal_f4_rtos\it.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 hal_f4_rtos\it.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+hal_f4_rtos\it.o: User\ultraSonar.h
+hal_f4_rtos\it.o: User\delay.h

@@ -18,7 +18,7 @@ void StepperRun(Stepper *StepperPTR,int speed,int dir)
 	else return ;
 	if(dir == LEFT) 
 	{
-		StepperPTR->pos += 1.8/8;
+		StepperPTR->pos += 1.8f/8.0f;
 		HAL_GPIO_WritePin(StepperPTR->DIR_GPIOx,StepperPTR->DIR_GPIO_Pin,GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(StepperPTR->STP_GPIOx,StepperPTR->STP_GPIO_Pin,GPIO_PIN_SET);
 		gen_delay_us(HalfPulseWidth);
@@ -27,7 +27,7 @@ void StepperRun(Stepper *StepperPTR,int speed,int dir)
 	}
 	else if(dir == RIGHT)
 	{
-		StepperPTR->pos -= 1.8/8;
+		StepperPTR->pos -= 1.8f/8.0f;
 		HAL_GPIO_WritePin(StepperPTR->DIR_GPIOx,StepperPTR->DIR_GPIO_Pin,GPIO_PIN_SET);
 		HAL_GPIO_WritePin(StepperPTR->STP_GPIOx,StepperPTR->STP_GPIO_Pin,GPIO_PIN_SET);
 		gen_delay_us(HalfPulseWidth);
@@ -38,12 +38,12 @@ void StepperRun(Stepper *StepperPTR,int speed,int dir)
 
 void StepperRotate(Stepper *StepperPTR, float angle, int dir)
 {
-	int steps = (int)ABS((angle/1.8*8.0));
+	int steps = (int)ABS((angle/1.8f*8.0f));
 	if(dir == LEFT) 
 	{
 		while(steps--)
 		{
-			StepperPTR->pos += 1.8/8.0;
+			StepperPTR->pos += 1.8f/8.0f;
 			HAL_GPIO_WritePin(StepperPTR->DIR_GPIOx,StepperPTR->DIR_GPIO_Pin,GPIO_PIN_RESET);
 			HAL_GPIO_WritePin(StepperPTR->STP_GPIOx,StepperPTR->STP_GPIO_Pin,GPIO_PIN_SET);
 			gen_delay_us(PULSE_US);

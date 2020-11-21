@@ -64,6 +64,11 @@ void Error_Handler(void);
 #define RF_A_GPIO_Port GPIOE
 #define RF_B_Pin GPIO_PIN_6
 #define RF_B_GPIO_Port GPIOE
+#define SONARF_TRIG_Pin GPIO_PIN_14
+#define SONARF_TRIG_GPIO_Port GPIOE
+#define SONARF_ECHO_Pin GPIO_PIN_15
+#define SONARF_ECHO_GPIO_Port GPIOE
+#define SONARF_ECHO_EXTI_IRQn EXTI15_10_IRQn
 #define RB_A_Pin GPIO_PIN_14
 #define RB_A_GPIO_Port GPIOB
 #define RB_B_Pin GPIO_PIN_15

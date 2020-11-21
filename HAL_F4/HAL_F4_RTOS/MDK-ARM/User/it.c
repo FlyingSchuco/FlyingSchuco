@@ -44,3 +44,18 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 */
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == GPIO_PIN_15)
+	{
+		if(HAL_GPIO_ReadPin(sonarF->GPIO_Echo,sonarF->PIN_Echo) == GPIO_PIN_SET)
+		{
+			sonarF->startTime = __HAL_TIM_GET_COUNTER(&htim6);
+		}
+		else
+		{
+			sonarF->endTime = __HAL_TIM_GET_COUNTER(&htim6);
+			sonarF->state = HAL_OK;
+		}
+	}
+}
