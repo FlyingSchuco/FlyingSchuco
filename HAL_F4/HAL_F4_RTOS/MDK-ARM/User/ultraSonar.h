@@ -10,9 +10,12 @@ typedef struct
 	HAL_StatusTypeDef state;	//状态
 	uint16_t startTime;
 	uint16_t endTime;
+	int num;
 }Sonar;
-Sonar* SonarInit(GPIO_TypeDef *GPIO_Trig, uint16_t PIN_Trig, GPIO_TypeDef *GPIO_Echo, uint16_t PIN_Echo);
+Sonar* SonarInit(GPIO_TypeDef *GPIO_Trig, uint16_t PIN_Trig, GPIO_TypeDef *GPIO_Echo, uint16_t PIN_Echo, int num);
 void SonarTrig(Sonar *sonar);
+float SonarMeasure(Sonar *sonar);
+
 #endif
 
 

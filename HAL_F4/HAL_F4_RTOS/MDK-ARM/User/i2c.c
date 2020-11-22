@@ -3,7 +3,6 @@
  
 static void i2c_Delay(void)
 {
-	uint8_t i;
 	gen_delay_us(1);
 }
 //开始信号

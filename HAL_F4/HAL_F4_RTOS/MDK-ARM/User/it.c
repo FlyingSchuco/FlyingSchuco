@@ -46,7 +46,31 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	if(GPIO_Pin == GPIO_PIN_15)
+	if(GPIO_Pin == sonarL->PIN_Echo)
+	{
+		if(HAL_GPIO_ReadPin(sonarL->GPIO_Echo,sonarL->PIN_Echo) == GPIO_PIN_SET)
+		{
+			sonarL->startTime = __HAL_TIM_GET_COUNTER(&htim6);
+		}
+		else
+		{
+			sonarL->endTime = __HAL_TIM_GET_COUNTER(&htim6);
+			sonarL->state = HAL_OK;
+		}
+	}
+	else if(GPIO_Pin == sonarR->PIN_Echo)
+	{
+		if(HAL_GPIO_ReadPin(sonarR->GPIO_Echo,sonarR->PIN_Echo) == GPIO_PIN_SET)
+		{
+			sonarR->startTime = __HAL_TIM_GET_COUNTER(&htim6);
+		}
+		else
+		{
+			sonarR->endTime = __HAL_TIM_GET_COUNTER(&htim6);
+			sonarR->state = HAL_OK;
+		}
+	}
+	else if(GPIO_Pin == sonarF->PIN_Echo)
 	{
 		if(HAL_GPIO_ReadPin(sonarF->GPIO_Echo,sonarF->PIN_Echo) == GPIO_PIN_SET)
 		{
@@ -56,6 +80,18 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		{
 			sonarF->endTime = __HAL_TIM_GET_COUNTER(&htim6);
 			sonarF->state = HAL_OK;
+		}
+	}
+	else if(GPIO_Pin == sonarB->PIN_Echo)
+	{
+		if(HAL_GPIO_ReadPin(sonarB->GPIO_Echo,sonarB->PIN_Echo) == GPIO_PIN_SET)
+		{
+			sonarB->startTime = __HAL_TIM_GET_COUNTER(&htim6);
+		}
+		else
+		{
+			sonarB->endTime = __HAL_TIM_GET_COUNTER(&htim6);
+			sonarB->state = HAL_OK;
 		}
 	}
 }

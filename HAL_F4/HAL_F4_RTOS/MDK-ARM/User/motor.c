@@ -97,13 +97,12 @@ void MotorRunToTarget(Motor *motor, uint32_t PWM)
 void MotorSpeedMeasure(Motor *motor)
 {
 	motor->enc = (__HAL_TIM_GET_COUNTER((motor->Timer_Encoder)));
-	printf("enc = %d\n",motor->enc);
 	motor->Speed = motor->enc-motor->enc_old;
 	motor->enc_old=motor->enc;
 	if (motor->Speed > 2000)
 		motor->Speed -= 5000;
 	else if (motor->Speed <= -2000)
 		motor->Speed += 5000;
-	motor->Speed = (int)(fabs((float)motor->Speed)*20.0f/385.0f*60.0f);	//rpm
+	motor->Speed = (int)(fabs((float)motor->Speed)*100.0f/385.0f/4.0f*60.0f);	//rpm
 }
 

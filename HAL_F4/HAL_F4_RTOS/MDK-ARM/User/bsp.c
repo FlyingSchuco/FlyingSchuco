@@ -9,49 +9,6 @@ ProtocolData *RxData;
 
 void BSP_Init(void)
 {
-	//OLED设置
-	/*
-	OLED_Init();
-	OLED_Print(0, 0, "LF  LB  RF  RB",TYPE16X16,TYPE8X16);
-	*/
-	//ATK-MPU6050设置
-	
-	printf("MPU6050 TEST\r\n");
-    while(mpu_dmp_init())//MPU DMP初始化
-	{
-	    printf("MPU6050 Error!!!\r\n");
-		HAL_Delay(500);
-	}
-    printf("MPU6050 OK\r\n");
-	
-	//MPU6050设置
-	/*
-	printf("MPU Init");
-	MPU_Init(FAST);
-	HAL_UART_Receive_IT(&huart4,&tmpBuf,1);	// 开启串口中断
-	printf("MPU OK!");
-	*/
-	
-	
-	//定时时钟开启
-	HAL_TIM_Base_Start(&htim6);
-    __HAL_TIM_SET_COUNTER(&htim6,0x0000);
-	
-	//超声波初始化
-	sonarF = SonarInit(SONARF_TRIG_GPIO_Port, SONARF_TRIG_Pin,
-						SONARF_ECHO_GPIO_Port, SONARF_ECHO_Pin);
-	if(sonarF == NULL) printf("Error: sonarF NULL\n");
-	//保存openmv接受的数据
-	RxData = (ProtocolData *)pvPortMalloc(sizeof(ProtocolData));
-
-	//开启接受中断
-	//HAL_UART_Receive_IT(&huart1, (uint8_t *)&FrontBuffer, 1);
-	//HAL_UART_Receive_IT(&huart2, (uint8_t *)&BackBuffer, 1);
-	
-	//初始化机器人姿态
-	myRob = MotionStateInit();
-	
-	
 	//初始化4个电机
 	motorLF = MotorInit(GPIOC,GPIO_PIN_6,
 						GPIOC,GPIO_PIN_7,
@@ -82,6 +39,46 @@ void BSP_Init(void)
 	MotorRun(motorLB, STOP, 0);
 	MotorRun(motorRF, STOP, 0);
 	MotorRun(motorRB, STOP, 0);
+	
+	//ATK-MPU6050设置
+	/*
+	printf("MPU6050 TEST\r\n");
+    while(mpu_dmp_init())//MPU DMP初始化
+	{
+	    printf("MPU6050 Error!!!\r\n");
+		HAL_Delay(500);
+	}
+    printf("MPU6050 OK\r\n");
+	*/
+	//定时时钟开启
+	HAL_TIM_Base_Start(&htim6);
+    __HAL_TIM_SET_COUNTER(&htim6,0x0000);
+	
+	//超声波初始化
+	sonarF = SonarInit(SONARF_TRIG_GPIO_Port, SONARF_TRIG_Pin,
+						SONARF_ECHO_GPIO_Port, SONARF_ECHO_Pin, 1);
+	if(sonarF == NULL) printf("Error: sonarF NULL\n");
+	
+	sonarB = SonarInit(SONARB_TRIG_GPIO_Port, SONARB_TRIG_Pin,
+						SONARB_ECHO_GPIO_Port, SONARB_ECHO_Pin, 2);
+	if(sonarB == NULL) printf("Error: sonarB NULL\n");
+	
+	sonarL = SonarInit(SONARL_TRIG_GPIO_Port, SONARL_TRIG_Pin,
+						SONARL_ECHO_GPIO_Port, SONARL_ECHO_Pin, 3);
+	if(sonarL == NULL) printf("Error: sonarL NULL\n");
+	
+	sonarR = SonarInit(SONARR_TRIG_GPIO_Port, SONARR_TRIG_Pin,
+						SONARR_ECHO_GPIO_Port, SONARR_ECHO_Pin, 4);
+	if(sonarR == NULL) printf("Error: sonarR NULL\n");
+	//保存openmv接受的数据
+	RxData = (ProtocolData *)pvPortMalloc(sizeof(ProtocolData));
+
+	//开启接受中断
+	HAL_UART_Receive_IT(&huart1, (uint8_t *)&FrontBuffer, 1);
+	HAL_UART_Receive_IT(&huart2, (uint8_t *)&BackBuffer, 1);
+	
+	//初始化机器人姿态
+	myRob = MotionStateInit();
 	
 }
 

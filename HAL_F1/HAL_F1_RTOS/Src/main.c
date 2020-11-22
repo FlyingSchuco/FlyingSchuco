@@ -88,9 +88,6 @@ uint8_t IRQBuffer;
 ProtocolData *RxData;
 PID_Typedef *PID_Front;
 Stepper *StepperFront;
-float vx = 0,vy = 0,omega = 0;
-float L = 16, R = 3;
-
 
 /* USER CODE END PV */
 

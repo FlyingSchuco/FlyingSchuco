@@ -10,4 +10,7 @@
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 extern TIM_HandleTypeDef htim6;
 extern Sonar *sonarF;
+extern Sonar *sonarB;
+extern Sonar *sonarL;
+extern Sonar *sonarR;
 #endif 

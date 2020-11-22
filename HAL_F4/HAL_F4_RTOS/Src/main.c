@@ -84,7 +84,9 @@ extern Motor *motorRF;
 extern Motor *motorRB;
 extern Sonar *sonarF;
 
-float vx = 0.0f,vy = 0.0f,omega = 0.0f;
+float vx = 0.0f,vy = 0.0f,	//cm/s
+	omega = 0.0f, // rad/s
+	yaw = 0.0f;	// deg
 float L = 16.0f, R = 3.0f;
 
 /*
@@ -219,7 +221,7 @@ int main(void)
   /* definition and creation of wheelSpeed */
   const osThreadAttr_t wheelSpeed_attributes = {
     .name = "wheelSpeed",
-    .priority = (osPriority_t) osPriorityNormal,
+    .priority = (osPriority_t) osPriorityHigh,
     .stack_size = 512
   };
   wheelSpeedHandle = osThreadNew(StartWheelSpeed, NULL, &wheelSpeed_attributes);
@@ -244,7 +246,7 @@ int main(void)
   const osThreadAttr_t ultraSonar_attributes = {
     .name = "ultraSonar",
     .priority = (osPriority_t) osPriorityNormal,
-    .stack_size = 512
+    .stack_size = 1024
   };
   ultraSonarHandle = osThreadNew(StartUltraSonar, NULL, &ultraSonar_attributes);
 
@@ -831,30 +833,70 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(SONARF_TRIG_GPIO_Port, SONARF_TRIG_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SONARR_TRIG_GPIO_Port, SONARR_TRIG_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOG, SONARF_TRIG_Pin|SONARL_TRIG_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SONARB_TRIG_GPIO_Port, SONARB_TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, IMU_SCL_Pin|IMU_SDA_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pin : SONARF_TRIG_Pin */
-  GPIO_InitStruct.Pin = SONARF_TRIG_Pin;
+  /*Configure GPIO pin : SONARR_TRIG_Pin */
+  GPIO_InitStruct.Pin = SONARR_TRIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(SONARF_TRIG_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(SONARR_TRIG_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SONARR_ECHO_Pin */
+  GPIO_InitStruct.Pin = SONARR_ECHO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(SONARR_ECHO_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : SONARF_TRIG_Pin SONARL_TRIG_Pin */
+  GPIO_InitStruct.Pin = SONARF_TRIG_Pin|SONARL_TRIG_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SONARF_ECHO_Pin */
   GPIO_InitStruct.Pin = SONARF_ECHO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(SONARF_ECHO_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SONARB_TRIG_Pin */
+  GPIO_InitStruct.Pin = SONARB_TRIG_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(SONARB_TRIG_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SONARB_ECHO_Pin */
+  GPIO_InitStruct.Pin = SONARB_ECHO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(SONARB_ECHO_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SONARL_ECHO_Pin */
+  GPIO_InitStruct.Pin = SONARL_ECHO_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(SONARL_ECHO_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : IMU_SCL_Pin IMU_SDA_Pin */
   GPIO_InitStruct.Pin = IMU_SCL_Pin|IMU_SDA_Pin;
@@ -864,6 +906,12 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -944,25 +992,26 @@ void StartIMUData(void *argument)
 void StartWheelControl(void *argument)
 {
   /* USER CODE BEGIN StartWheelControl */
-	PID_Typedef *LF_PID = PID_Init(POSITION,10,0,0,1,1000,0);
-	PID_Typedef *LB_PID = PID_Init(POSITION,0.6,1.2,0.2,1,1000,0);
-	PID_Typedef *RF_PID = PID_Init(POSITION,0.6,1.2,0.2,1,1000,0);
-	PID_Typedef *RB_PID = PID_Init(POSITION,0.6,1.2,0.2,1,1000,0);
+	PID_Typedef *LF_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
+	PID_Typedef *LB_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
+	PID_Typedef *RF_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
+	PID_Typedef *RB_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
+	PID_Typedef *OMG_PID = PID_Init(POSITION,0.08,0,0.5,2,24,-24);
 	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
   /* Infinite loop */
   for(;;)
   {
-	  /*
+	  taskENTER_CRITICAL();
+	  omega = PID_Calc(OMG_PID,yaw,myRob->yaw);
+	  taskEXIT_CRITICAL();
+	  //printf("%f\n",myRob->yaw);
+	  
 	  motorLF->TargetSpeed = (int)((-vx/K2	-vy/K2	-omega*L)/R * (30/Pi));
 	  motorLB->TargetSpeed = (int)((-vx/K2	+vy/K2	-omega*L)/R * (30/Pi));
 	  motorRF->TargetSpeed = (int)((+vx/K2	-vy/K2	-omega*L)/R * (30/Pi));
 	  motorRB->TargetSpeed = (int)((+vx/K2	+vy/K2	-omega*L)/R * (30/Pi));
-	  */
 	  
-	  motorLF->TargetSpeed = 60;
-	  motorLB->TargetSpeed = 0;
-	  motorRF->TargetSpeed = 0;
-	  motorRB->TargetSpeed = 0;
+	  
 	  
 	  taskENTER_CRITICAL();
 	  pwmLF = (int)PID_Calc(LF_PID, ABS(motorLF->TargetSpeed), motorLF->Speed);
@@ -971,12 +1020,12 @@ void StartWheelControl(void *argument)
 	  pwmRB = (int)PID_Calc(RB_PID, ABS(motorRB->TargetSpeed), motorRB->Speed);
 	  taskEXIT_CRITICAL();
 	  
-	  MotorRunToTarget(motorLF,800);
+	  MotorRunToTarget(motorLF,pwmLF);
 	  MotorRunToTarget(motorLB,pwmLB);
 	  MotorRunToTarget(motorRF,pwmRF);
 	  MotorRunToTarget(motorRB,pwmRB);
 	  
-	osDelay(50);
+	osDelay(10);
   }
   /* USER CODE END StartWheelControl */
 }
@@ -994,13 +1043,13 @@ void StartWheelSpeed(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  //测速
+	  //测�??
 	  MotorSpeedMeasure(motorLF);
 	  MotorSpeedMeasure(motorLB);
 	  MotorSpeedMeasure(motorRF);
 	  MotorSpeedMeasure(motorRB);
-	  printf("%d,%d,%d,%d\n",motorLF->Speed,motorLB->Speed,motorRF->Speed,motorRB->Speed);
-    osDelay(50);
+	  //printf("%d,%d,%d,%d\n",motorLF->Speed,motorLB->Speed,motorRF->Speed,motorRB->Speed);
+    osDelay(10);
   }
   /* USER CODE END StartWheelSpeed */
 }
@@ -1025,11 +1074,11 @@ void StartDecision(void *argument)
 	  } 
 	  else if(target->find == 1)	//找到灯塔
 	  {
-		  //if(myRob->yaw) 如果角度较小，
+		  //if(myRob->yaw) 如果角度较小
 		  {
 			  
 		  }
-		  //else //否则调整角度，
+		  //else //否则调整角度
 		  {
 			  if(myRob->dF >= 50)
 			  {
@@ -1042,8 +1091,28 @@ void StartDecision(void *argument)
 		  
 	  }
 	  */
-	vx = 10.0f, vy = 0.0f;
-	omega = 0.0f;
+	  /*
+	if(myRob->dF >= 50)
+	{
+		vx = 30.0f;
+		vy = 0.0f;
+		omega = 0.0f;
+	}
+	else if(myRob->dF >= 20)
+	{
+		vx = 13.3f+myRob->dF/3.0f;
+		vy = 0.0f;
+		omega = 0.0f;
+	}
+	else
+	{
+		vx = 10.0f;
+		vy = 0.0f;
+	}
+	*/
+	vx = 0.0f;
+	vy = 0.0f;
+	yaw = 0.0f;
     osDelay(10);
   }
   /* USER CODE END StartDecision */
@@ -1078,37 +1147,25 @@ void StartUltraSonar(void *argument)
 {
   /* USER CODE BEGIN StartUltraSonar */
 	float distF = 300.0f;
+	float distB = 300.0f;
+	float distL = 300.0f;
+	float distR = 300.0f;
   /* Infinite loop */
   for(;;)
   {
 	SonarTrig(sonarF);
+	//SonarTrig(sonarB);
+	SonarTrig(sonarL);
+	//SonarTrig(sonarR);
     osDelay(30);
-	if(sonarF->state == HAL_BUSY)
-	{
-		sonarF->state = HAL_OK;
-	}
-	else if(sonarF->state == HAL_OK)
-	{
-		if(sonarF->endTime > sonarF->startTime)
-		{
-			distF = 340.0f*(float)(+sonarF->endTime-sonarF->startTime)/2.0f/10000.0f;
-			myRob->dF = distF;
-		}
-		else if(sonarF->endTime < sonarF->startTime)
-		{
-			distF = 340.0f*(float)(0xFFFF-sonarF->startTime+sonarF->endTime)/2.0f/10000.0f;
-			myRob->dF = distF;
-		}
-		else 
-		{
-			
-		}
-	}
-	else 
-	{
-		
-	}
-	//printf("distF = %f\n",distF);
+	distF = SonarMeasure(sonarF);
+	//distB = SonarMeasure(sonarB);
+	distL = SonarMeasure(sonarL);
+	//distR = SonarMeasure(sonarR);
+	printf("distF = %f\n",distF);
+//    printf("distB = %f\n",distB);
+    printf("distL = %f\n",distL);
+//    printf("distR = %f\n",distR);
   }
   /* USER CODE END StartUltraSonar */
 }

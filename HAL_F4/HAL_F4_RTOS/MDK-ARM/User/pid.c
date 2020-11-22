@@ -45,7 +45,7 @@ float PID_Calc(PID_Typedef *PID_Ptr, float target, float measure)
 		{
 			PID_Ptr->pout = PID_Ptr->kp * (PID_Ptr->err-PID_Ptr->lastErr);
 			PID_Ptr->iout = PID_Ptr->ki * PID_Ptr->err;
-			PID_Ptr->dout = PID_Ptr->kd * (PID_Ptr->err - 2.0*PID_Ptr->lastErr + PID_Ptr->prvErr);
+			PID_Ptr->dout = PID_Ptr->kd * (PID_Ptr->err - 2.0f*PID_Ptr->lastErr + PID_Ptr->prvErr);
 		}
 		PID_Ptr->output = PID_Ptr->pout + PID_Ptr->iout + PID_Ptr->dout;
 		//防止输出饱和

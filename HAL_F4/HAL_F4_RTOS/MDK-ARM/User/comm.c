@@ -1,8 +1,8 @@
 #include "comm.h"
 
 int state = 0;					//匹配状态
-uint8_t UART2_RxBuff[128];		//接收缓冲
-uint8_t UART2_Rx_Cnt = 0;		//接收缓冲计数
+uint8_t UART1_RxBuff[128];		//接收缓冲
+uint8_t UART1_Rx_Cnt = 0;		//接收缓冲计数
 
 /*
 int fputc(int ch, FILE *f) 
@@ -40,6 +40,13 @@ void RxDecode(uint8_t RxBuffer[])
 		#endif 
 		RxData->color = BLUE;
 	}
+	else if(RxBuffer[2]==0x03)
+	{
+		#ifdef INFO
+		printf("color = LOST\n");
+		#endif 
+		RxData->color = LOST;
+	}
 	else 
 	{
 		#ifdef WARNING
@@ -48,7 +55,7 @@ void RxDecode(uint8_t RxBuffer[])
 	}
 	RxData->dx = RxBuffer[3]<<8 | RxBuffer[4];
 	RxData->dy = RxBuffer[5]<<8 | RxBuffer[6];
-	#ifdef INFO
+	#ifdef DEBUG
 	printf("dx = %d,dy = %d\n",RxData->dx,RxData->dy);
 	#endif
 	#ifdef DEBUG
@@ -62,18 +69,18 @@ void RxConfirm(uint8_t Data)
 	if(state == 0 && Data == 0x1D)
 	{
 		state = 1;
-		UART2_RxBuff[UART2_Rx_Cnt++] = Data;
+		UART1_RxBuff[UART1_Rx_Cnt++] = Data;
 	}
 	//第二帧
 	else if(state == 1 && Data == 0xD1)
 	{
 		state = 2;
-		UART2_RxBuff[UART2_Rx_Cnt++] = Data;
+		UART1_RxBuff[UART1_Rx_Cnt++] = Data;
 	}
 	else if(state == 2)
 	{
-		UART2_RxBuff[UART2_Rx_Cnt++] = Data;
-		if(UART2_Rx_Cnt>=PTCLen-1)
+		UART1_RxBuff[UART1_Rx_Cnt++] = Data;
+		if(UART1_Rx_Cnt>=PTCLen-1)
 		{
 			state = 3;
 		}
@@ -83,15 +90,15 @@ void RxConfirm(uint8_t Data)
 	{
 		if(Data == 0xED)
 		{
-			UART2_RxBuff[UART2_Rx_Cnt++] = Data;
-			RxDecode(UART2_RxBuff);
+			UART1_RxBuff[UART1_Rx_Cnt++] = Data;
+			RxDecode(UART1_RxBuff);
 			state = 0;
-			UART2_Rx_Cnt = 0;
+			UART1_Rx_Cnt = 0;
 		}
 		else 
 		{
 			state = 0;
-			memset(UART2_RxBuff,0,128);
+			memset(UART1_RxBuff,0,128);
 			#ifdef WARNING
 			printf("Warning: Receive a frame without ending\n");
 			#endif
@@ -101,8 +108,8 @@ void RxConfirm(uint8_t Data)
 	else 
 	{
 		state = 0;
-		UART2_Rx_Cnt = 0;
-		memset(UART2_RxBuff,0,128);
+		UART1_Rx_Cnt = 0;
+		memset(UART1_RxBuff,0,128);
 	}
 }
 
@@ -110,14 +117,7 @@ void RxConfirm(uint8_t Data)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   /* Prevent unused argument(s) compilation warning */
-  UNUSED(huart);
-	#ifdef ST
-	//串口透传
-	SerialTransmission(&huart1);
-	#else
-	//解析数据
 	RxConfirm(FrontBuffer);
-	#endif
 	HAL_UART_Receive_IT(&huart1, (uint8_t *)&FrontBuffer, 1);   //再开启接收中断
 }
 

@@ -10,7 +10,8 @@ typedef enum
 {
 	RED,
 	GREEN,
-	BLUE
+	BLUE,
+	LOST
 }COLOR;
 
 typedef struct
