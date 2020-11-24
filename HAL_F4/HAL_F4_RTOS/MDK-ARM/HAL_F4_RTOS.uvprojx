@@ -149,7 +149,7 @@
             <RestoreSysVw>1</RestoreSysVw>
           </Target>
           <RunDebugAfterBuild>0</RunDebugAfterBuild>
-          <TargetSelection>3</TargetSelection>
+          <TargetSelection>5</TargetSelection>
           <SimDlls>
             <CpuDll></CpuDll>
             <CpuDllArguments></CpuDllArguments>
@@ -163,7 +163,7 @@
             <PeripheralDll></PeripheralDll>
             <PeripheralDllArguments></PeripheralDllArguments>
             <InitializationFile>..\STM32DBG.ini</InitializationFile>
-            <Driver>Segger\JL2CM3.dll</Driver>
+            <Driver>STLink\ST-LINKIII-KEIL_SWO.dll</Driver>
           </TargetDlls>
         </DebugOption>
         <Utilities>
@@ -369,7 +369,7 @@
               <MiscControls>--locale=english</MiscControls>
               <Define>USE_HAL_DRIVER,STM32F407xx</Define>
               <Undefine></Undefine>
-              <IncludePath>../Inc;                       ../Drivers/STM32F4xx_HAL_Driver/Inc;                       ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                       ../Middlewares/Third_Party/FreeRTOS/Source/include;                       ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;                       ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                       ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                       ../Drivers/CMSIS/Include;                       .\User</IncludePath>
+              <IncludePath>../Inc;                           ../Drivers/STM32F4xx_HAL_Driver/Inc;                           ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;                           ../Middlewares/Third_Party/FreeRTOS/Source/include;                           ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2;                           ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F;                           ../Drivers/CMSIS/Device/ST/STM32F4xx/Include;                           ../Drivers/CMSIS/Include;                           .\User</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -696,6 +696,11 @@
               <FileName>stepper.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\User\stepper.c</FilePath>
+            </File>
+            <File>
+              <FileName>myMath.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\User\myMath.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -40,6 +40,9 @@ void BSP_Init(void)
 	MotorRun(motorRF, STOP, 0);
 	MotorRun(motorRB, STOP, 0);
 	
+	//步进电机初始化
+	stepperFront = StepperInit(STP_GPIO_Port,STP_Pin,DIR_GPIO_Port,DIR_Pin);
+	
 	//ATK-MPU6050设置
 	/*
 	printf("MPU6050 TEST\r\n");
@@ -50,6 +53,7 @@ void BSP_Init(void)
 	}
     printf("MPU6050 OK\r\n");
 	*/
+	
 	//定时时钟开启
 	HAL_TIM_Base_Start(&htim6);
     __HAL_TIM_SET_COUNTER(&htim6,0x0000);
@@ -70,6 +74,7 @@ void BSP_Init(void)
 	sonarR = SonarInit(SONARR_TRIG_GPIO_Port, SONARR_TRIG_Pin,
 						SONARR_ECHO_GPIO_Port, SONARR_ECHO_Pin, 4);
 	if(sonarR == NULL) printf("Error: sonarR NULL\n");
+
 	//保存openmv接受的数据
 	RxData = (ProtocolData *)pvPortMalloc(sizeof(ProtocolData));
 

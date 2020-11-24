@@ -17,13 +17,17 @@ typedef struct
 	short aacx,aacy,aacz;		//加速度传感器原始数据
 	short gyrox,gyroy,gyroz;	//陀螺仪原始数据
 	short temp;					//温度
-	int x;						//地面坐标系x轴
-	int y;						//地面坐标系y轴
+	float x;						//地面坐标系x轴
+	float y;						//地面坐标系y轴
 	float dF;
 	float dB;
 	float dL;
 	float dR;
+	uint8_t target;				//是否发现目标
+	short pixel_dx;				//像素x偏移
+	short pixel_dy;				//像素y偏移
 }MotionState;
 MotionState *MotionStateInit(void);
+void Cruise(void);
 
 #endif

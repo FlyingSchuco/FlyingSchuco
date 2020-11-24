@@ -42,6 +42,8 @@ hal_f4_rtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM
 hal_f4_rtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
 hal_f4_rtos\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
 hal_f4_rtos\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
+hal_f4_rtos\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+hal_f4_rtos\main.o: .\User\myMath.h
 hal_f4_rtos\main.o: .\User\pid.h
 hal_f4_rtos\main.o: .\User\oled.h
 hal_f4_rtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
@@ -49,7 +51,6 @@ hal_f4_rtos\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
 hal_f4_rtos\main.o: .\User\bsp.h
 hal_f4_rtos\main.o: .\User\motion.h
 hal_f4_rtos\main.o: .\User\motor.h
-hal_f4_rtos\main.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
 hal_f4_rtos\main.o: .\User\mpu.h
 hal_f4_rtos\main.o: .\User\i2c.h
 hal_f4_rtos\main.o: .\User\delay.h

@@ -91,10 +91,15 @@ void Error_Handler(void);
 #define SONARB_ECHO_Pin GPIO_PIN_12
 #define SONARB_ECHO_GPIO_Port GPIOC
 #define SONARB_ECHO_EXTI_IRQn EXTI15_10_IRQn
+#define DIR_Pin GPIO_PIN_4
+#define DIR_GPIO_Port GPIOD
+#define STP_Pin GPIO_PIN_5
+#define STP_GPIO_Port GPIOD
 #define SONARL_TRIG_Pin GPIO_PIN_15
 #define SONARL_TRIG_GPIO_Port GPIOG
 #define SONARL_ECHO_Pin GPIO_PIN_4
 #define SONARL_ECHO_GPIO_Port GPIOB
+#define SONARL_ECHO_EXTI_IRQn EXTI4_IRQn
 #define IMU_SCL_Pin GPIO_PIN_6
 #define IMU_SCL_GPIO_Port GPIOB
 #define IMU_SDA_Pin GPIO_PIN_7

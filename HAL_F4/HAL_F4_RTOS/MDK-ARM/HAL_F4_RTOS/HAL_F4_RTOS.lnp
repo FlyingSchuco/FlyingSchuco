@@ -51,6 +51,7 @@
 "hal_f4_rtos\ultrasonar.o"
 "hal_f4_rtos\comm.o"
 "hal_f4_rtos\stepper.o"
+"hal_f4_rtos\mymath.o"
 --library_type=microlib --strict --scatter "HAL_F4_RTOS\HAL_F4_RTOS.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

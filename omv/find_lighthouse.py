@@ -5,11 +5,11 @@ import ustruct
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
-sensor.set_hmirror(False)
-sensor.set_vflip(False)
+sensor.set_hmirror(True)
+sensor.set_vflip(True)
 sensor.set_auto_gain(False)
 
-sensor.set_auto_exposure(False,75)
+#sensor.set_auto_exposure(False,75)
 sensor.skip_frames(time = 2000)
 
 BlueThreshold = (0, 72, 14, 62, -128, -53)
@@ -34,7 +34,7 @@ def send_data(dx,dy,color):
         ID = 0x3F
     elif color == BLUE:
         ID = 0x0F
-    elif color == NULL:
+    elif color == LOST:
         ID = 0x03
     else:
         ID = 0x00

@@ -27,11 +27,14 @@
 #include "stm32f4xx_hal.h"
 #include "stdlib.h"
 #include "stdio.h"
+#include "math.h"
+#include "myMath.h"
 #include "pid.h"
 #include "oled.h"
 #include "bsp.h"
 #include "it.h"
 #include "motor.h"
+#include "motion.h"
 #include "mpu.h"
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h"
@@ -47,6 +50,9 @@
 /* USER CODE BEGIN PD */
 #define Pi 3.1416f
 #define K2 1.414f
+#define ANGLE_TH 45.0f
+#define DECISION
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -82,21 +88,18 @@ extern Motor *motorLF;
 extern Motor *motorLB;
 extern Motor *motorRF;
 extern Motor *motorRB;
+extern Stepper *stepperFront;
 extern Sonar *sonarF;
+extern Sonar *sonarB;
+extern Sonar *sonarL;
+extern Sonar *sonarR;
+extern ProtocolData *RxData;
 
 float vx = 0.0f,vy = 0.0f,	//cm/s
 	omega = 0.0f, // rad/s
 	yaw = 0.0f;	// deg
 float L = 16.0f, R = 3.0f;
 
-/*
-extern unsigned char flagAC;	//
-extern unsigned char flagOG;	//
-extern unsigned char flagAG;	//角度
-extern unsigned char RX_Buf_AC[11];	//数据包缓冲区
-extern unsigned char RX_Buf_OG[11];	//数据包缓冲区
-extern unsigned char RX_Buf_AG[11];	//角度数据包缓冲区
-*/
 
 /* USER CODE END PV */
 
@@ -245,7 +248,7 @@ int main(void)
   /* definition and creation of ultraSonar */
   const osThreadAttr_t ultraSonar_attributes = {
     .name = "ultraSonar",
-    .priority = (osPriority_t) osPriorityNormal,
+    .priority = (osPriority_t) osPriorityHigh,
     .stack_size = 1024
   };
   ultraSonarHandle = osThreadNew(StartUltraSonar, NULL, &ultraSonar_attributes);
@@ -851,6 +854,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SONARB_TRIG_GPIO_Port, SONARB_TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, DIR_Pin|STP_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, IMU_SCL_Pin|IMU_SDA_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : SONARR_TRIG_Pin */
@@ -863,7 +869,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : SONARR_ECHO_Pin */
   GPIO_InitStruct.Pin = SONARR_ECHO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SONARR_ECHO_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SONARF_TRIG_Pin SONARL_TRIG_Pin */
@@ -876,7 +882,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : SONARF_ECHO_Pin */
   GPIO_InitStruct.Pin = SONARF_ECHO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SONARF_ECHO_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SONARB_TRIG_Pin */
@@ -889,13 +895,20 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : SONARB_ECHO_Pin */
   GPIO_InitStruct.Pin = SONARB_ECHO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SONARB_ECHO_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : DIR_Pin STP_Pin */
+  GPIO_InitStruct.Pin = DIR_Pin|STP_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SONARL_ECHO_Pin */
   GPIO_InitStruct.Pin = SONARL_ECHO_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SONARL_ECHO_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : IMU_SCL_Pin IMU_SDA_Pin */
@@ -908,6 +921,9 @@ static void MX_GPIO_Init(void)
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI3_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
@@ -1002,7 +1018,14 @@ void StartWheelControl(void *argument)
   for(;;)
   {
 	  taskENTER_CRITICAL();
-	  omega = PID_Calc(OMG_PID,yaw,myRob->yaw);
+	  if(fabs(yaw)>150.0f)
+	  {
+		omega = PID_Calc(OMG_PID,DegRange180(yaw+180.0f),DegRange180(myRob->yaw+180.0f));
+	  }
+	  else 
+	  {
+		omega = PID_Calc(OMG_PID,yaw,myRob->yaw);
+	  }
 	  taskEXIT_CRITICAL();
 	  //printf("%f\n",myRob->yaw);
 	  
@@ -1043,7 +1066,7 @@ void StartWheelSpeed(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	  //测�??
+	  //measure the speed of 4 motors
 	  MotorSpeedMeasure(motorLF);
 	  MotorSpeedMeasure(motorLB);
 	  MotorSpeedMeasure(motorRF);
@@ -1064,56 +1087,97 @@ void StartWheelSpeed(void *argument)
 void StartDecision(void *argument)
 {
   /* USER CODE BEGIN StartDecision */
+	float angle = 0.0f;
   /* Infinite loop */
   for(;;)
   {
-	  /*
-	  if(target->find == 0)			//没找到灯
+	  #ifdef DECISION
+	  if(myRob->target == 0)			//No targets are found 
 	  {
-		  Idle();					//按照固定线路巡航
-	  } 
-	  else if(target->find == 1)	//找到灯塔
-	  {
-		  //if(myRob->yaw) 如果角度较小
+		  //Cruise();					//Cruising on a fixed route
+		  
+		  if(fabs(myRob->yaw) < 90.0f)
+		  {
+			  yaw = 0.0f;
+		  }
+		  else
+		  {
+			  yaw = -180.0f;
+		  }
+		  
+		  if(fabs(myRob->yaw) < 10.0f)
+		  {
+		      myRob->x = (300.0f - myRob->dF + myRob->dB)/2.0f;
+			  myRob->y = (200.0f - myRob->dR + myRob->dL)/2.0f;
+		  }
+		  else if(fabs(myRob->yaw) > (180.0f - 10.0f))
+		  {
+		      myRob->x = (300.0f + myRob->dF - myRob->dB)/2.0f;
+			  myRob->y = (200.0f + myRob->dR - myRob->dL)/2.0f; 
+		  }
+		  else 
 		  {
 			  
 		  }
-		  //else //否则调整角度
+		  
+		  if(fabs(myRob->x-150.0f)>5.0f)
 		  {
-			  if(myRob->dF >= 50)
+			  vx = sign(150.0f - myRob->x) * 10.0f ;// * cos(myRob->yaw);
+		  }
+		  else 
+		  {
+			  vx = 0.0f;
+		  }
+		  
+		  if(fabs(myRob->y-100.0f)>5.0f)
+		  {
+			  vy = sign(150.0f - myRob->y) * 10.0f ;// * cos(myRob->yaw);
+		  }
+		  else 
+		  {
+			  vy = 0.0f;
+		  }
+		  
+	  } 
+	  else if(myRob->target == 1)	//target is found
+	  {
+		  // -360~360 to -180~180
+		  angle = DegRange180(myRob->yaw + stepperFront->pos);
+		  
+		  if(fabs(angle) < ANGLE_TH || fabs(angle) > (180.0f - ANGLE_TH) ) 			//yaw is small
+		  {
+			  vx = 20.0f;
+			  vy = 0.0f;
+			  yaw = 0.0f;
+		  }
+		  else 						//yaw is large enough
+		  {
+			  yaw = stepperFront->pos;
+			  //ready to bump
+			  if(myRob->dF>30.0f)
 			  {
-				  
+				  vx = 30.0f * cos(stepperFront->pos);
+				  vy = 30.0f * sin(stepperFront->pos);
+			  }
+			  else if(myRob->dF>15.0f)
+			  {
+				  vx = myRob->dF * cos(stepperFront->pos);
+				  vy = myRob->dF * sin(stepperFront->pos);
+			  }
+			  else
+			  {
+				  vx = 10.0f * cos(stepperFront->pos);
+				  vy = 10.0f * sin(stepperFront->pos);
 			  }
 		  }
 	  }
-	  else 
+	  else 							//Not used
 	  {
 		  
 	  }
-	  */
-	  /*
-	if(myRob->dF >= 50)
-	{
-		vx = 30.0f;
-		vy = 0.0f;
-		omega = 0.0f;
-	}
-	else if(myRob->dF >= 20)
-	{
-		vx = 13.3f+myRob->dF/3.0f;
-		vy = 0.0f;
-		omega = 0.0f;
-	}
-	else
-	{
-		vx = 10.0f;
-		vy = 0.0f;
-	}
-	*/
-	vx = 0.0f;
-	vy = 0.0f;
-	yaw = 0.0f;
-    osDelay(10);
+	  
+	#endif
+    osDelay(20);
   }
   /* USER CODE END StartDecision */
 }
@@ -1128,10 +1192,12 @@ void StartDecision(void *argument)
 void StartStepperControl(void *argument)
 {
   /* USER CODE BEGIN StartStepperControl */
+	PID_Typedef *STP_PID = PID_Init(POSITION,0.2,0.008,0.02,2,45,-45);
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	// StepperRun =  (int)PID_Calc(STP_PID,0,myRob->pixel_dx);
+    osDelay(10);
   }
   /* USER CODE END StartStepperControl */
 }
@@ -1146,26 +1212,36 @@ void StartStepperControl(void *argument)
 void StartUltraSonar(void *argument)
 {
   /* USER CODE BEGIN StartUltraSonar */
-	float distF = 300.0f;
-	float distB = 300.0f;
-	float distL = 300.0f;
-	float distR = 300.0f;
+	float distF[5] = {300.0f, 300.0f, 300.0f, 300.0f, 300.0f};
+	float distB[5] = {300.0f, 300.0f, 300.0f, 300.0f, 300.0f};
+	float distL[5] = {300.0f, 300.0f, 300.0f, 300.0f, 300.0f};
+	float distR[5] = {300.0f, 300.0f, 300.0f, 300.0f, 300.0f};
+	int count = 0;
   /* Infinite loop */
   for(;;)
   {
 	SonarTrig(sonarF);
-	//SonarTrig(sonarB);
+	SonarTrig(sonarB);
 	SonarTrig(sonarL);
-	//SonarTrig(sonarR);
-    osDelay(30);
-	distF = SonarMeasure(sonarF);
-	//distB = SonarMeasure(sonarB);
-	distL = SonarMeasure(sonarL);
-	//distR = SonarMeasure(sonarR);
-	printf("distF = %f\n",distF);
-//    printf("distB = %f\n",distB);
-    printf("distL = %f\n",distL);
-//    printf("distR = %f\n",distR);
+	SonarTrig(sonarR);
+    osDelay(50);
+	distF[count] = SonarMeasure(sonarF);
+	distB[count] = SonarMeasure(sonarB);
+	distL[count] = SonarMeasure(sonarL);
+	distR[count] = SonarMeasure(sonarR);
+	count++;
+	if(count == 5)
+	{
+		qsort(distF,5,sizeof(float),CmpFloat);
+		qsort(distB,5,sizeof(float),CmpFloat);
+		qsort(distL,5,sizeof(float),CmpFloat);
+		qsort(distR,5,sizeof(float),CmpFloat);
+		myRob->dF = (distF[1]+distF[2]+distF[3])/3.0f;
+		myRob->dB = (distB[1]+distB[2]+distB[3])/3.0f;
+		myRob->dL = (distL[1]+distL[2]+distL[3])/3.0f;
+		myRob->dR = (distR[1]+distR[2]+distR[3])/3.0f;
+		count = 0;
+	}
   }
   /* USER CODE END StartUltraSonar */
 }
@@ -1180,10 +1256,23 @@ void StartUltraSonar(void *argument)
 void StartOpenmvCom(void *argument)
 {
   /* USER CODE BEGIN StartOpenmvCom */
+	
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+	taskENTER_CRITICAL();
+	if(RxData->color == LOST)
+	{
+		myRob->target = 1;
+	}
+	else 
+	{
+		myRob->target = 0;
+	}
+	myRob->pixel_dx = RxData->dx;
+	myRob->pixel_dy = RxData->dy;
+	taskEXIT_CRITICAL();
+    osDelay(20);
   }
   /* USER CODE END StartOpenmvCom */
 }

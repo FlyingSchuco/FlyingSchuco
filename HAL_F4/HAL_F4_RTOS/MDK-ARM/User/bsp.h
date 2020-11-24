@@ -23,7 +23,6 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
 
-extern MotionState *MyRob;
 extern u8 nonside[];
 void BSP_Init(void);
 #endif
