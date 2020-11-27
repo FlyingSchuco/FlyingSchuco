@@ -549,7 +549,7 @@ ork --depend=hal_f1_rtos\startup_stm32f103xe.d -ohal_f1_rtos\startup_stm32f103x
 e.o -I..\Inc -IC:\Users\vicru\Desktop\Schuco\FlyingSchuco\HAL_F1\HAL_F1_RTOS\MD
 K-ARM\RTE -ID:\Install\Keil_v5\ARM\PACK\ARM\CMSIS\4.5.0\CMSIS\Include -ID:\Inst
 all\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include --predefine="__MIC
-ROLIB SETA 1" --predefine="__UVISION_VERSION SETA 521" --predefine="_RTE_ SETA 
+ROLIB SETA 1" --predefine="__UVISION_VERSION SETA 514" --predefine="_RTE_ SETA 
 1" --predefine="STM32F10X_HD SETA 1" --list=startup_stm32f103xe.lst startup_stm
 32f103xe.s
 

@@ -103,6 +103,6 @@ void MotorSpeedMeasure(Motor *motor)
 		motor->Speed -= 5000;
 	else if (motor->Speed <= -2000)
 		motor->Speed += 5000;
-	motor->Speed = (int)(fabs((float)motor->Speed)*100.0f/385.0f/4.0f*60.0f);	//rpm
+	motor->Speed = (int)(fabs((float)motor->Speed)*50.0f/21.3f/11.0f/4.0f*60.0f);	//rpm
 }
 

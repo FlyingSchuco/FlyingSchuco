@@ -25,6 +25,8 @@
 #include "task.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "motor.h"
+#include "pid.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,7 +36,17 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
- 
+extern Motor *motorLF;
+extern Motor *motorLB;
+extern Motor *motorRF;
+extern Motor *motorRB;
+
+extern PID_Typedef *LF_PID;
+extern PID_Typedef *LB_PID;
+extern PID_Typedef *RF_PID;
+extern PID_Typedef *RB_PID;
+
+int pwmLF = 0, pwmLB = 0,pwmRF = 0, pwmRB =0;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -58,6 +70,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim8;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
@@ -260,6 +273,32 @@ void TIM8_UP_TIM13_IRQHandler(void)
   /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 1 */
 
   /* USER CODE END TIM8_UP_TIM13_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM7 global interrupt.
+  */
+void TIM7_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM7_IRQn 0 */
+	  MotorSpeedMeasure(motorLF);
+	  MotorSpeedMeasure(motorLB);
+	  MotorSpeedMeasure(motorRF);
+	  MotorSpeedMeasure(motorRB);
+
+	  pwmLF = (int)PID_Calc(LF_PID, ABS(motorLF->TargetSpeed), motorLF->Speed);
+	  pwmLB = (int)PID_Calc(LB_PID, ABS(motorLB->TargetSpeed), motorLB->Speed);
+	  pwmRF = (int)PID_Calc(RF_PID, ABS(motorRF->TargetSpeed), motorRF->Speed);
+	  pwmRB = (int)PID_Calc(RB_PID, ABS(motorRB->TargetSpeed), motorRB->Speed);
+	  MotorRunToTarget(motorLF,pwmLF);
+	  MotorRunToTarget(motorLB,pwmLB);
+	  MotorRunToTarget(motorRF,pwmRF);
+	  MotorRunToTarget(motorRB,pwmRB);
+  /* USER CODE END TIM7_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim7);
+  /* USER CODE BEGIN TIM7_IRQn 1 */
+
+  /* USER CODE END TIM7_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

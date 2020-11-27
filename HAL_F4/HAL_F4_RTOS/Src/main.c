@@ -34,6 +34,7 @@
 #include "bsp.h"
 #include "it.h"
 #include "motor.h"
+#include "stepper.h"
 #include "motion.h"
 #include "mpu.h"
 #include "inv_mpu.h"
@@ -51,6 +52,8 @@
 #define Pi 3.1416f
 #define K2 1.414f
 #define ANGLE_TH 45.0f
+//#define PID_TEST
+#define KINE
 #define DECISION
 
 /* USER CODE END PD */
@@ -66,6 +69,7 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim8;
 TIM_HandleTypeDef htim9;
 TIM_HandleTypeDef htim12;
@@ -97,7 +101,7 @@ extern ProtocolData *RxData;
 
 float vx = 0.0f,vy = 0.0f,	//cm/s
 	omega = 0.0f, // rad/s
-	yaw = 0.0f;	// deg
+	yaw_target = 0.0f;	// deg
 float L = 16.0f, R = 3.0f;
 
 
@@ -117,6 +121,7 @@ static void MX_TIM12_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM7_Init(void);
 void StartDefaultTask(void *argument);
 void StartIMUData(void *argument);
 void StartWheelControl(void *argument);
@@ -174,6 +179,7 @@ int main(void)
   MX_TIM6_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
 	BSP_Init();
   /* USER CODE END 2 */
@@ -560,6 +566,44 @@ static void MX_TIM6_Init(void)
 }
 
 /**
+  * @brief TIM7 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM7_Init(void)
+{
+
+  /* USER CODE BEGIN TIM7_Init 0 */
+
+  /* USER CODE END TIM7_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM7_Init 1 */
+
+  /* USER CODE END TIM7_Init 1 */
+  htim7.Instance = TIM7;
+  htim7.Init.Prescaler = 84-1;
+  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim7.Init.Period = 20000;
+  htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM7_Init 2 */
+
+  /* USER CODE END TIM7_Init 2 */
+
+}
+
+/**
   * @brief TIM8 Initialization Function
   * @param None
   * @retval None
@@ -775,7 +819,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 19200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -808,7 +852,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
+  huart2.Init.BaudRate = 19200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -972,28 +1016,28 @@ void StartIMUData(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	taskENTER_CRITICAL();
+//	taskENTER_CRITICAL();
 	  
 	if(mpu_dmp_get_data(&pitch,&roll,&yaw)==0)
 	{
-			temp = MPU_Get_Temperature();	
-			MPU_Get_Accelerometer(&aacx,&aacy,&aacz);	
-			MPU_Get_Gyroscope(&gyrox,&gyroy,&gyroz);	
-			myRob->aacx = aacx;
-			myRob->aacy = -aacy;
-			myRob->aacz = -aacz;
-			myRob->gyrox = gyrox;
-			myRob->gyroy = -gyroy;
-			myRob->gyroz = -gyroz;
+//			temp = MPU_Get_Temperature();	
+//			MPU_Get_Accelerometer(&aacx,&aacy,&aacz);	
+//			MPU_Get_Gyroscope(&gyrox,&gyroy,&gyroz);	
+//			myRob->aacx = aacx;
+//			myRob->aacy = -aacy;
+//			myRob->aacz = -aacz;
+//			myRob->gyrox = gyrox;
+//			myRob->gyroy = -gyroy;
+//			myRob->gyroz = -gyroz;
 			myRob->roll = roll;
 			myRob->pitch = -pitch;
 			myRob->yaw = -yaw;
-			myRob->temp = temp; 
+//			myRob->temp = temp; 
 		//printf("pitch = %f, yaw = %f, roll = %f\n", myRob->pitch, myRob->yaw, myRob->roll);
 	}
 	  
-	taskEXIT_CRITICAL();
-    osDelay(5);
+//	taskEXIT_CRITICAL();
+    osDelay(50);
   }
   /* USER CODE END StartIMUData */
 }
@@ -1008,47 +1052,45 @@ void StartIMUData(void *argument)
 void StartWheelControl(void *argument)
 {
   /* USER CODE BEGIN StartWheelControl */
-	PID_Typedef *LF_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
-	PID_Typedef *LB_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
-	PID_Typedef *RF_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
-	PID_Typedef *RB_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
-	PID_Typedef *OMG_PID = PID_Init(POSITION,0.08,0,0.5,2,24,-24);
-	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
+//	PID_Typedef *LF_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
+//	PID_Typedef *LB_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
+//	PID_Typedef *RF_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
+//	PID_Typedef *RB_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
+	PID_Typedef *OMG_PID = PID_Init(POSITION,0.015,0,0.0005,2,12,-12);
+//	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
   /* Infinite loop */
   for(;;)
   {
 	  taskENTER_CRITICAL();
-	  if(fabs(yaw)>150.0f)
+	  
+	  if(fabs(yaw_target)>150.0f)
 	  {
-		omega = PID_Calc(OMG_PID,DegRange180(yaw+180.0f),DegRange180(myRob->yaw+180.0f));
+		omega = PID_Calc(OMG_PID,DegRange180(yaw_target+180.0f),DegRange180(myRob->yaw+180.0f));
 	  }
 	  else 
 	  {
-		omega = PID_Calc(OMG_PID,yaw,myRob->yaw);
+		omega = PID_Calc(OMG_PID,yaw_target,myRob->yaw);
 	  }
 	  taskEXIT_CRITICAL();
-	  //printf("%f\n",myRob->yaw);
-	  
+//	  
+	  #ifdef KINE
 	  motorLF->TargetSpeed = (int)((-vx/K2	-vy/K2	-omega*L)/R * (30/Pi));
 	  motorLB->TargetSpeed = (int)((-vx/K2	+vy/K2	-omega*L)/R * (30/Pi));
 	  motorRF->TargetSpeed = (int)((+vx/K2	-vy/K2	-omega*L)/R * (30/Pi));
 	  motorRB->TargetSpeed = (int)((+vx/K2	+vy/K2	-omega*L)/R * (30/Pi));
+	  #endif
 	  
-	  
-	  
-	  taskENTER_CRITICAL();
-	  pwmLF = (int)PID_Calc(LF_PID, ABS(motorLF->TargetSpeed), motorLF->Speed);
-	  pwmLB = (int)PID_Calc(LB_PID, ABS(motorLB->TargetSpeed), motorLB->Speed);
-	  pwmRF = (int)PID_Calc(RF_PID, ABS(motorRF->TargetSpeed), motorRF->Speed);
-	  pwmRB = (int)PID_Calc(RB_PID, ABS(motorRB->TargetSpeed), motorRB->Speed);
-	  taskEXIT_CRITICAL();
-	  
-	  MotorRunToTarget(motorLF,pwmLF);
-	  MotorRunToTarget(motorLB,pwmLB);
-	  MotorRunToTarget(motorRF,pwmRF);
-	  MotorRunToTarget(motorRB,pwmRB);
-	  
-	osDelay(10);
+//	  taskENTER_CRITICAL();
+	  #ifdef PID_TEST
+	  motorLF->TargetSpeed = 60;
+	  motorLB->TargetSpeed = 60;
+	  motorRF->TargetSpeed = 60;
+	  motorRB->TargetSpeed = 60;
+	  #endif 
+
+//	  taskEXIT_CRITICAL();
+
+	osDelay(20);
   }
   /* USER CODE END StartWheelControl */
 }
@@ -1067,12 +1109,14 @@ void StartWheelSpeed(void *argument)
   for(;;)
   {
 	  //measure the speed of 4 motors
+	  /*
 	  MotorSpeedMeasure(motorLF);
 	  MotorSpeedMeasure(motorLB);
 	  MotorSpeedMeasure(motorRF);
 	  MotorSpeedMeasure(motorRB);
-	  //printf("%d,%d,%d,%d\n",motorLF->Speed,motorLB->Speed,motorRF->Speed,motorRB->Speed);
-    osDelay(10);
+	  */
+//	printf("%d,%d,%d,%d\n",motorLF->Speed,motorLB->Speed,motorRF->Speed,motorRB->Speed);
+    osDelay(20);
   }
   /* USER CODE END StartWheelSpeed */
 }
@@ -1091,18 +1135,26 @@ void StartDecision(void *argument)
   /* Infinite loop */
   for(;;)
   {
+	  #ifdef DECISION_TEST
+	  vx = 10.0f;
+	  vy = 10.0f;
+	  yaw_target = 0.0f;
+	  #endif
 	  #ifdef DECISION
 	  if(myRob->target == 0)			//No targets are found 
 	  {
+		  vx = 0.0f;
+		  vy = 0.0f;
+		  yaw_target = myRob->yaw;
 		  //Cruise();					//Cruising on a fixed route
-		  
+		  #ifdef CRUISE
 		  if(fabs(myRob->yaw) < 90.0f)
 		  {
-			  yaw = 0.0f;
+			  yaw_target = 0.0f;
 		  }
 		  else
 		  {
-			  yaw = -180.0f;
+			  yaw_target = -180.0f;
 		  }
 		  
 		  if(fabs(myRob->yaw) < 10.0f)
@@ -1137,39 +1189,60 @@ void StartDecision(void *argument)
 		  {
 			  vy = 0.0f;
 		  }
-		  
+		  #endif
 	  } 
 	  else if(myRob->target == 1)	//target is found
 	  {
 		  // -360~360 to -180~180
 		  angle = DegRange180(myRob->yaw + stepperFront->pos);
-		  
-		  if(fabs(angle) < ANGLE_TH || fabs(angle) > (180.0f - ANGLE_TH) ) 			//yaw is small
+//		  yaw_target = myRob->yaw + stepperFront->pos;
+//		  vx = 0.0f;
+//		  vy = 0.0f;
+		  if(fabs(angle) < ANGLE_TH) 			//yaw is small
 		  {
-			  vx = 20.0f;
+			  vx = 25.0f;
 			  vy = 0.0f;
-			  yaw = 0.0f;
+			  yaw_target = 0.0f;
+		  }
+		  else if( fabs(angle) > (180.0f - ANGLE_TH) )
+		  {
+			  vx = 25.0f;
+			  vy = 0.0f;
+			  yaw_target = -180.0f;
 		  }
 		  else 						//yaw is large enough
 		  {
-			  yaw = stepperFront->pos;
-			  //ready to bump
-			  if(myRob->dF>30.0f)
+			  yaw_target = myRob->yaw + stepperFront->pos;
+			  if(fabs(yaw_target-myRob->yaw)>2)
 			  {
-				  vx = 30.0f * cos(stepperFront->pos);
-				  vy = 30.0f * sin(stepperFront->pos);
-			  }
-			  else if(myRob->dF>15.0f)
-			  {
-				  vx = myRob->dF * cos(stepperFront->pos);
-				  vy = myRob->dF * sin(stepperFront->pos);
+				  vx = 0.0f;
+				  vy = 0.0f;
 			  }
 			  else
 			  {
-				  vx = 10.0f * cos(stepperFront->pos);
-				  vy = 10.0f * sin(stepperFront->pos);
+				  vx = 10.0f ;//* cos(stepperFront->pos);
+				  vy = 0.0f ;//* sin(stepperFront->pos);
 			  }
+			  //ready to bump
+			  
+//			  if(myRob->dF>30.0f)
+//			  {
+//				  vx = 30.0f * cos(stepperFront->pos);
+//				  vy = 30.0f * sin(stepperFront->pos);
+//			  }
+//			  else if(myRob->dF>15.0f)
+//			  {
+//				  vx = myRob->dF * cos(stepperFront->pos);
+//				  vy = myRob->dF * sin(stepperFront->pos);
+//			  }
+//			  else
+//			  {
+//				  vx = 10.0f * cos(stepperFront->pos);
+//				  vy = 10.0f * sin(stepperFront->pos);
+//			  }
+			  
 		  }
+			
 	  }
 	  else 							//Not used
 	  {
@@ -1192,12 +1265,19 @@ void StartDecision(void *argument)
 void StartStepperControl(void *argument)
 {
   /* USER CODE BEGIN StartStepperControl */
-	PID_Typedef *STP_PID = PID_Init(POSITION,0.2,0.008,0.02,2,45,-45);
+	PID_Typedef *STP_PID = PID_Init(POSITION,0.05,0.0,0.006,2,45,-45);
   /* Infinite loop */
   for(;;)
   {
-	// StepperRun =  (int)PID_Calc(STP_PID,0,myRob->pixel_dx);
-    osDelay(10);
+	if(myRob->target == 1)
+	{
+		StepperAutoRotate(stepperFront,PID_Calc(STP_PID,0,myRob->pixel_dx));
+	}
+	else
+	{
+		StepperAutoRotate(stepperFront,1.8);
+	}
+    osDelay(5);
   }
   /* USER CODE END StartStepperControl */
 }
@@ -1220,28 +1300,28 @@ void StartUltraSonar(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	SonarTrig(sonarF);
-	SonarTrig(sonarB);
-	SonarTrig(sonarL);
-	SonarTrig(sonarR);
+//	SonarTrig(sonarF);
+//	SonarTrig(sonarB);
+//	SonarTrig(sonarL);
+//	SonarTrig(sonarR);
     osDelay(50);
-	distF[count] = SonarMeasure(sonarF);
-	distB[count] = SonarMeasure(sonarB);
-	distL[count] = SonarMeasure(sonarL);
-	distR[count] = SonarMeasure(sonarR);
-	count++;
-	if(count == 5)
-	{
-		qsort(distF,5,sizeof(float),CmpFloat);
-		qsort(distB,5,sizeof(float),CmpFloat);
-		qsort(distL,5,sizeof(float),CmpFloat);
-		qsort(distR,5,sizeof(float),CmpFloat);
-		myRob->dF = (distF[1]+distF[2]+distF[3])/3.0f;
-		myRob->dB = (distB[1]+distB[2]+distB[3])/3.0f;
-		myRob->dL = (distL[1]+distL[2]+distL[3])/3.0f;
-		myRob->dR = (distR[1]+distR[2]+distR[3])/3.0f;
-		count = 0;
-	}
+//	distF[count] = SonarMeasure(sonarF);
+//	distB[count] = SonarMeasure(sonarB);
+//	distL[count] = SonarMeasure(sonarL);
+//	distR[count] = SonarMeasure(sonarR);
+//	count++;
+//	if(count == 5)
+//	{
+//		qsort(distF,5,sizeof(float),CmpFloat);
+//		qsort(distB,5,sizeof(float),CmpFloat);
+//		qsort(distL,5,sizeof(float),CmpFloat);
+//		qsort(distR,5,sizeof(float),CmpFloat);
+//		myRob->dF = (distF[1]+distF[2]+distF[3])/3.0f;
+//		myRob->dB = (distB[1]+distB[2]+distB[3])/3.0f;
+//		myRob->dL = (distL[1]+distL[2]+distL[3])/3.0f;
+//		myRob->dR = (distR[1]+distR[2]+distR[3])/3.0f;
+//		count = 0;
+//	}
   }
   /* USER CODE END StartUltraSonar */
 }
@@ -1263,11 +1343,11 @@ void StartOpenmvCom(void *argument)
 	taskENTER_CRITICAL();
 	if(RxData->color == LOST)
 	{
-		myRob->target = 1;
+		myRob->target = 0;
 	}
 	else 
 	{
-		myRob->target = 0;
+		myRob->target = 1;
 	}
 	myRob->pixel_dx = RxData->dx;
 	myRob->pixel_dy = RxData->dy;

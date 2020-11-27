@@ -41,3 +41,7 @@ hal_f4_rtos\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/
 hal_f4_rtos\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
 hal_f4_rtos\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
 hal_f4_rtos\stm32f4xx_it.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
+hal_f4_rtos\stm32f4xx_it.o: .\User\motor.h
+hal_f4_rtos\stm32f4xx_it.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
+hal_f4_rtos\stm32f4xx_it.o: .\User\pid.h
+hal_f4_rtos\stm32f4xx_it.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

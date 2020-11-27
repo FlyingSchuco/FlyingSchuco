@@ -55,5 +55,6 @@ hal_f4_rtos\bsp.o: User\inv_mpu_dmp_motion_driver.h
 hal_f4_rtos\bsp.o: User\ultraSonar.h
 hal_f4_rtos\bsp.o: User\stepper.h
 hal_f4_rtos\bsp.o: User\pid.h
+hal_f4_rtos\bsp.o: User\myMath.h
 hal_f4_rtos\bsp.o: User\comm.h
 hal_f4_rtos\bsp.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\string.h

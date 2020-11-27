@@ -118,6 +118,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   /* Prevent unused argument(s) compilation warning */
 	RxConfirm(FrontBuffer);
-	HAL_UART_Receive_IT(&huart1, (uint8_t *)&FrontBuffer, 1);   //再开启接收中断
+	HAL_UART_Receive_IT(&huart2, (uint8_t *)&FrontBuffer, 1);   //再开启接收中断
 }
 

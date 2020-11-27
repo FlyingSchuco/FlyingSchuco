@@ -9,7 +9,7 @@ sensor.set_hmirror(True)
 sensor.set_vflip(True)
 sensor.set_auto_gain(False)
 
-#sensor.set_auto_exposure(False,75)
+sensor.set_auto_exposure(False,75)
 sensor.skip_frames(time = 2000)
 
 BlueThreshold = (0, 72, 14, 62, -128, -53)
@@ -18,7 +18,7 @@ RedThreshold = (7, 67, 14, 127, -20, 127)
 
 #串口初始化
 uart = UART(3,115200)
-uart.init(115200, bits=8, parity=None, stop=1)
+uart.init(19200, bits=8, parity=None, stop=1)
 
 RED = 1
 GREEN = 2

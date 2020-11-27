@@ -17,17 +17,46 @@ Library Manager: ArmAr.exe V5.06 update 3 (build 300)
 Hex Converter:   FromElf.exe V5.06 update 3 (build 300)
 CPU DLL:         SARMCM3.DLL V5.21a
 Dialog DLL:      DCM.DLL V1.13.8.0
-Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V2.0.18.0
+Target DLL:      Segger\JL2CM3.dll V2.99.23.0
 Dialog DLL:      TCM.DLL V1.14.14.0
  
 <h2>Project:</h2>
 C:\Users\vicru\Desktop\Schuco\FlyingSchuco\HAL_F4\HAL_F4_RTOS\MDK-ARM\HAL_F4_RTOS.uvprojx
-Project File Date:  11/24/2020
+Project File Date:  11/27/2020
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 3 (build 300)', folder: 'D:\Install\Keil_v5\ARM\ARMCC\Bin'
 Build target 'HAL_F4_RTOS'
-"HAL_F4_RTOS\HAL_F4_RTOS.axf" - 0 Error(s), 0 Warning(s).
+compiling main.c...
+../Src/main.c(1013): warning:  #177-D: variable "aacx" was declared but never referenced
+        short aacx = 0,aacy = 0,aacz = 0;               
+../Src/main.c(1013): warning:  #177-D: variable "aacy" was declared but never referenced
+        short aacx = 0,aacy = 0,aacz = 0;               
+../Src/main.c(1013): warning:  #177-D: variable "aacz" was declared but never referenced
+        short aacx = 0,aacy = 0,aacz = 0;               
+../Src/main.c(1014): warning:  #177-D: variable "gyrox" was declared but never referenced
+        short gyrox = 0,gyroy = 0,gyroz= 0;     
+../Src/main.c(1014): warning:  #177-D: variable "gyroy" was declared but never referenced
+        short gyrox = 0,gyroy = 0,gyroz= 0;     
+../Src/main.c(1014): warning:  #177-D: variable "gyroz" was declared but never referenced
+        short gyrox = 0,gyroy = 0,gyroz= 0;     
+../Src/main.c(1015): warning:  #177-D: variable "temp" was declared but never referenced
+        short temp = 0;         
+../Src/main.c(1295): warning:  #177-D: variable "distF" was declared but never referenced
+        float distF[5] = {300.0f, 300.0f, 300.0f, 300.0f, 300.0f};
+../Src/main.c(1296): warning:  #177-D: variable "distB" was declared but never referenced
+        float distB[5] = {300.0f, 300.0f, 300.0f, 300.0f, 300.0f};
+../Src/main.c(1297): warning:  #177-D: variable "distL" was declared but never referenced
+        float distL[5] = {300.0f, 300.0f, 300.0f, 300.0f, 300.0f};
+../Src/main.c(1298): warning:  #177-D: variable "distR" was declared but never referenced
+        float distR[5] = {300.0f, 300.0f, 300.0f, 300.0f, 300.0f};
+../Src/main.c(1299): warning:  #177-D: variable "count" was declared but never referenced
+        int count = 0;
+../Src/main.c: 12 warnings, 0 errors
+linking...
+Program Size: Code=33024 RO-data=4384 RW-data=352 ZI-data=36520  
+FromELF: creating hex file...
+"HAL_F4_RTOS\HAL_F4_RTOS.axf" - 0 Error(s), 12 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   C:\Users\vicru\Desktop\Schuco\FlyingSchuco\HAL_F4\HAL_F4_RTOS\MDK-ARM\RTE

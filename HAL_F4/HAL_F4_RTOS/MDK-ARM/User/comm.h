@@ -5,7 +5,7 @@
 #include "string.h"
 #include "stm32f4xx_hal.h"
 #define PTCLen 8
-#define DEBUG
+//#define DEBUG
 typedef enum
 {
 	RED,
@@ -23,6 +23,8 @@ typedef struct
 
 extern uint8_t FrontBuffer;
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
+
 extern ProtocolData *RxData;
 
 /*
