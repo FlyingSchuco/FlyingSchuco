@@ -42,3 +42,4 @@ hal_f4_rtos\stepper.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprec
 hal_f4_rtos\stepper.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
 hal_f4_rtos\stepper.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
 hal_f4_rtos\stepper.o: User\myMath.h
+hal_f4_rtos\stepper.o: D:\Install\Keil_v5\ARM\ARMCC\Bin\..\include\math.h

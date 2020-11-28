@@ -38,4 +38,16 @@ int sign(float x)
 	}
 }
 
+float MinAngle(float target, float now)
+{
+		if(fabs(target-now)<180.0f)
+		{
+			return now;
+		}
+		else
+		{
+			return (target+360.0f-fabs(target-now));
+		}
+}
+
 

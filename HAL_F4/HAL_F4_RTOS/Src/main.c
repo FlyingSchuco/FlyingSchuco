@@ -51,9 +51,10 @@
 /* USER CODE BEGIN PD */
 #define Pi 3.1416f
 #define K2 1.414f
-#define ANGLE_TH 45.0f
+#define ANGLE_TH 85.0f
 //#define PID_TEST
 #define KINE
+//#define DECISION_TEST
 #define DECISION
 
 /* USER CODE END PD */
@@ -819,11 +820,11 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 19200;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_RX;
+  huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart1) != HAL_OK)
@@ -856,7 +857,7 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_RX;
+  huart2.Init.Mode = UART_MODE_TX_RX;
   huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart2) != HAL_OK)
@@ -1037,7 +1038,7 @@ void StartIMUData(void *argument)
 	}
 	  
 //	taskEXIT_CRITICAL();
-    osDelay(50);
+    osDelay(20);
   }
   /* USER CODE END StartIMUData */
 }
@@ -1056,21 +1057,13 @@ void StartWheelControl(void *argument)
 //	PID_Typedef *LB_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
 //	PID_Typedef *RF_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
 //	PID_Typedef *RB_PID = PID_Init(POSITION,6,1.2,0.2,1,1000,0);
-	PID_Typedef *OMG_PID = PID_Init(POSITION,0.015,0,0.0005,2,12,-12);
+	PID_Typedef *OMG_PID = PID_Init(POSITION,0.025,0.0000,0.0012,2,3,-3);
 //	int pwmLF = 0, pwmLB = 0, pwmRF = 0, pwmRB = 0;
   /* Infinite loop */
   for(;;)
   {
 	  taskENTER_CRITICAL();
-	  
-	  if(fabs(yaw_target)>150.0f)
-	  {
-		omega = PID_Calc(OMG_PID,DegRange180(yaw_target+180.0f),DegRange180(myRob->yaw+180.0f));
-	  }
-	  else 
-	  {
-		omega = PID_Calc(OMG_PID,yaw_target,myRob->yaw);
-	  }
+	  omega = PID_Calc(OMG_PID,yaw_target,myRob->yaw);
 	  taskEXIT_CRITICAL();
 //	  
 	  #ifdef KINE
@@ -1132,20 +1125,60 @@ void StartDecision(void *argument)
 {
   /* USER CODE BEGIN StartDecision */
 	float angle = 0.0f;
+	int flag = 0, state = 0;
   /* Infinite loop */
   for(;;)
   {
 	  #ifdef DECISION_TEST
-	  vx = 10.0f;
-	  vy = 10.0f;
+	  vx = 0.0f;
+	  vy = 0.0f;
 	  yaw_target = 0.0f;
 	  #endif
 	  #ifdef DECISION
+
 	  if(myRob->target == 0)			//No targets are found 
 	  {
-		  vx = 0.0f;
-		  vy = 0.0f;
-		  yaw_target = myRob->yaw;
+		  yaw_target = 0.0f;
+		  if(state == 1)
+		  {
+			  vx = 0.0f;
+			  vy = -25.0f;
+			  state = 0;
+			  osDelay(1000);
+		  }
+		  else if(state == 2)
+		  {
+			  vx = 0.0f;
+			  vy = 25.0f;
+			  state = 0;
+			  osDelay(1000);
+		  }
+		  else
+		  {
+			  vx = 0.0f;
+			  vy = 0.0f;
+		  }
+//		  if(fabs(myRob->yaw)<90.0f && flag == 0) 
+//		  {
+//			yaw_target = myRob->yaw + 5.0f;
+//		  }
+//		  else if(fabs(myRob->yaw)<90.0f && flag == 1) 
+//		  {
+//			 yaw_target = myRob->yaw - 5.0f;
+//		  }
+//		  else
+//		  {
+//			  flag = !flag;
+//			  if((myRob->yaw)>=90.0f)
+//			  {
+//				  yaw_target = 85.0f;
+//			  }
+//			  else if((myRob->yaw)<=-90.0f)
+//			  {
+//				  yaw_target = -85.0f;
+//			  }
+//		  }
+		  osDelay(25);
 		  //Cruise();					//Cruising on a fixed route
 		  #ifdef CRUISE
 		  if(fabs(myRob->yaw) < 90.0f)
@@ -1195,24 +1228,12 @@ void StartDecision(void *argument)
 	  {
 		  // -360~360 to -180~180
 		  angle = DegRange180(myRob->yaw + stepperFront->pos);
+		  yaw_target = 0.0f;
 //		  yaw_target = myRob->yaw + stepperFront->pos;
 //		  vx = 0.0f;
 //		  vy = 0.0f;
 		  if(fabs(angle) < ANGLE_TH) 			//yaw is small
 		  {
-			  vx = 25.0f;
-			  vy = 0.0f;
-			  yaw_target = 0.0f;
-		  }
-		  else if( fabs(angle) > (180.0f - ANGLE_TH) )
-		  {
-			  vx = 25.0f;
-			  vy = 0.0f;
-			  yaw_target = -180.0f;
-		  }
-		  else 						//yaw is large enough
-		  {
-			  yaw_target = myRob->yaw + stepperFront->pos;
 			  if(fabs(yaw_target-myRob->yaw)>2)
 			  {
 				  vx = 0.0f;
@@ -1220,9 +1241,48 @@ void StartDecision(void *argument)
 			  }
 			  else
 			  {
-				  vx = 10.0f ;//* cos(stepperFront->pos);
-				  vy = 0.0f ;//* sin(stepperFront->pos);
+				  vx = 25.0f;
+				  vy = 0.0f;
 			  }
+		  }
+		  else if( fabs(angle) > (180.0f - ANGLE_TH) )
+		  {
+			  if(fabs(yaw_target-myRob->yaw)>2)
+			  {
+				  vx = 0.0f;
+				  vy = 0.0f;
+			  }
+			  else
+			  {
+				  vx = -25.0f;
+				  vy = 0.0f;
+			  }
+		  }
+		  else 						//yaw is large enough
+		  {
+			  if(angle>0.0f)
+			  {
+				  vy = 25.0f;
+				  vx = 0.0f;
+				  state = 1;
+			  }
+			  else
+			  {
+				  vy = -25.0f;
+				  vx = 0.0f;
+				  state = 2;
+			  }
+//			  yaw_target = myRob->yaw + stepperFront->pos;
+//			  if(fabs(yaw_target-myRob->yaw)>2)
+//			  {
+//				  vx = 0.0f;
+//				  vy = 0.0f;
+//			  }
+//			  else
+//			  {
+//				  vx = 10.0f ;//* cos(stepperFront->pos);
+//				  vy = 0.0f ;//* sin(stepperFront->pos);
+//			  }
 			  //ready to bump
 			  
 //			  if(myRob->dF>30.0f)
@@ -1265,19 +1325,47 @@ void StartDecision(void *argument)
 void StartStepperControl(void *argument)
 {
   /* USER CODE BEGIN StartStepperControl */
-	PID_Typedef *STP_PID = PID_Init(POSITION,0.05,0.0,0.006,2,45,-45);
+	PID_Typedef *STP_PID = PID_Init(POSITION,0.05,0.0,0.006,2,5,-5);
+	float angle_target = 0.0f;  char str[10];
+	int steps = 0;
   /* Infinite loop */
   for(;;)
   {
 	if(myRob->target == 1)
 	{
-		StepperAutoRotate(stepperFront,PID_Calc(STP_PID,0,myRob->pixel_dx));
+		angle_target = PID_Calc(STP_PID,0,myRob->pixel_dx);
+		sprintf(str,"%.2f*\n",angle_target);
+		steps = (int)ABS((angle_target/1.8f*8.0f));
+
+		HAL_UART_Transmit(&huart1,(uint8_t *)(str),strlen(str),10);
+		osDelay(20);
+		if(angle_target>0)
+		{
+			stepperFront->pos += steps*1.8f/8.0f;
+		}
+		else 
+		{
+			stepperFront->pos -= steps*1.8f/8.0f;
+		}
 	}
-	else
+    else
 	{
-		StepperAutoRotate(stepperFront,1.8);
+		angle_target = 36.0f;
+		sprintf(str,"%.2f*\n",angle_target);
+		steps = (int)ABS((angle_target/1.8f*8.0f));
+
+		HAL_UART_Transmit(&huart1,(uint8_t *)(str),strlen(str),10);
+		osDelay(650);
+		if(angle_target>0)
+		{
+			stepperFront->pos += steps*1.8f/8.0f;
+		}
+		else 
+		{
+			stepperFront->pos -= steps*1.8f/8.0f;
+		}
 	}
-    osDelay(5);
+	stepperFront->pos = DegRange180(stepperFront->pos);
   }
   /* USER CODE END StartStepperControl */
 }
@@ -1345,9 +1433,13 @@ void StartOpenmvCom(void *argument)
 	{
 		myRob->target = 0;
 	}
-	else 
+	else if(RxData->color == GREEN || RxData->color == RED ||RxData->color == BLUE)
 	{
 		myRob->target = 1;
+	}
+	else 
+	{
+		myRob->target = 0;
 	}
 	myRob->pixel_dx = RxData->dx;
 	myRob->pixel_dy = RxData->dy;
