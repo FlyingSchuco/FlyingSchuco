@@ -1011,9 +1011,9 @@ void StartIMUData(void *argument)
 {
   /* USER CODE BEGIN StartIMUData */
 	float pitch = 0,roll = 0,yaw = 0; 		
-	short aacx = 0,aacy = 0,aacz = 0;		
-	short gyrox = 0,gyroy = 0,gyroz= 0;	
-	short temp = 0;		
+//	short aacx = 0,aacy = 0,aacz = 0;		
+//	short gyrox = 0,gyroy = 0,gyroz= 0;	
+//	short temp = 0;		
   /* Infinite loop */
   for(;;)
   {
@@ -1065,7 +1065,7 @@ void StartWheelControl(void *argument)
 	  taskENTER_CRITICAL();
 	  omega = PID_Calc(OMG_PID,yaw_target,myRob->yaw);
 	  taskEXIT_CRITICAL();
-//	  
+
 	  #ifdef KINE
 	  motorLF->TargetSpeed = (int)((-vx/K2	-vy/K2	-omega*L)/R * (30/Pi));
 	  motorLB->TargetSpeed = (int)((-vx/K2	+vy/K2	-omega*L)/R * (30/Pi));
@@ -1073,7 +1073,6 @@ void StartWheelControl(void *argument)
 	  motorRB->TargetSpeed = (int)((+vx/K2	+vy/K2	-omega*L)/R * (30/Pi));
 	  #endif
 	  
-//	  taskENTER_CRITICAL();
 	  #ifdef PID_TEST
 	  motorLF->TargetSpeed = 60;
 	  motorLB->TargetSpeed = 60;
@@ -1081,7 +1080,6 @@ void StartWheelControl(void *argument)
 	  motorRB->TargetSpeed = 60;
 	  #endif 
 
-//	  taskEXIT_CRITICAL();
 
 	osDelay(20);
   }
@@ -1125,7 +1123,7 @@ void StartDecision(void *argument)
 {
   /* USER CODE BEGIN StartDecision */
 	float angle = 0.0f;
-	int flag = 0, state = 0;
+	int state = 0, dir_state = 0;
   /* Infinite loop */
   for(;;)
   {
@@ -1139,24 +1137,129 @@ void StartDecision(void *argument)
 	  if(myRob->target == 0)			//No targets are found 
 	  {
 		  yaw_target = 0.0f;
+		  //go back after bumping
 		  if(state == 1)
 		  {
 			  vx = 0.0f;
 			  vy = -25.0f;
 			  state = 0;
-			  osDelay(1000);
+			  osDelay(600);
 		  }
 		  else if(state == 2)
 		  {
 			  vx = 0.0f;
 			  vy = 25.0f;
 			  state = 0;
-			  osDelay(1000);
+			  osDelay(600);
 		  }
+		  //move to find lighthouse
 		  else
 		  {
-			  vx = 0.0f;
-			  vy = 0.0f;
+			  printf("dir state = %d\n",dir_state);
+			  if(dir_state == 0)
+			  {
+				vx = 20.0f;
+				vy = 0.0f;
+				if(myRob->dF < 45.0f && myRob->dB >= 45.0f)
+				{
+					dir_state = 1;
+				}
+				else if(myRob->dF < 45.0f && myRob->dB < 45.0f)
+				{
+					if(myRob->dR < 45.0f)
+					{
+						dir_state = 2;
+					}
+					else if(myRob->dL < 45.0f) 
+					{
+						dir_state = 3;
+					}
+					else
+					{
+						dir_state = 2;
+					}
+				}
+				else
+				{
+					dir_state = 0;
+				}
+			  }
+			  else if(dir_state == 1)
+			  {
+				vx = -20.0f;  
+				vy = 0.0f;
+				if(myRob->dB < 45.0f && myRob->dF >= 45.0f)
+				{
+					dir_state = 0;
+				}
+				else if(myRob->dB < 45.0f && myRob->dF < 45.0f)
+				{
+					if(myRob->dR < 45.0f)
+					{
+						dir_state = 2;
+					}
+					else if(myRob->dL < 45.0f) 
+					{
+						dir_state = 3;
+					}
+					else
+					{
+						dir_state = 2;
+					}
+				}
+				else
+				{
+					dir_state = 1;
+				}
+			  }
+			  else if(dir_state == 2)
+			  {
+				  vx = 0.0f;
+				  vy = -20.0f;
+				if(myRob->dL < 45.0f)
+				{
+					dir_state = 3;
+				}
+				else
+				{
+					if(myRob->dF > 45.0f)
+					{
+						dir_state = 0;
+					}
+					else if(myRob->dB > 45.0f)
+					{
+						dir_state = 1;
+					}
+					else
+					{
+						dir_state = 2;
+					}
+				}
+			  }
+			  else if(dir_state == 3)
+			  {
+				  vx = 0.0f;
+				  vy = 20.0f;
+				if(myRob->dR < 45.0f)
+				{
+					dir_state = 2;
+				}
+				else
+				{
+					if(myRob->dF > 45.0f)
+					{
+						dir_state = 0;
+					}
+					else if(myRob->dB > 45.0f)
+					{
+						dir_state = 1;
+					}
+					else
+					{
+						dir_state = 3;
+					}
+				}
+			  }
 		  }
 //		  if(fabs(myRob->yaw)<90.0f && flag == 0) 
 //		  {
@@ -1179,7 +1282,7 @@ void StartDecision(void *argument)
 //			  }
 //		  }
 		  osDelay(25);
-		  //Cruise();					//Cruising on a fixed route
+		  //Cruise
 		  #ifdef CRUISE
 		  if(fabs(myRob->yaw) < 90.0f)
 		  {
@@ -1223,7 +1326,7 @@ void StartDecision(void *argument)
 			  vy = 0.0f;
 		  }
 		  #endif
-	  } 
+	  }
 	  else if(myRob->target == 1)	//target is found
 	  {
 		  // -360~360 to -180~180
@@ -1326,7 +1429,7 @@ void StartStepperControl(void *argument)
 {
   /* USER CODE BEGIN StartStepperControl */
 	PID_Typedef *STP_PID = PID_Init(POSITION,0.05,0.0,0.006,2,5,-5);
-	float angle_target = 0.0f;  char str[10];
+	float angle_target = 0.0f;  char str[15];
 	int steps = 0;
   /* Infinite loop */
   for(;;)
@@ -1334,8 +1437,8 @@ void StartStepperControl(void *argument)
 	if(myRob->target == 1)
 	{
 		angle_target = PID_Calc(STP_PID,0,myRob->pixel_dx);
-		sprintf(str,"%.2f*\n",angle_target);
 		steps = (int)ABS((angle_target/1.8f*8.0f));
+		sprintf(str,"%.4f*\n",angle_target);
 
 		HAL_UART_Transmit(&huart1,(uint8_t *)(str),strlen(str),10);
 		osDelay(20);
@@ -1351,8 +1454,8 @@ void StartStepperControl(void *argument)
     else
 	{
 		angle_target = 36.0f;
-		sprintf(str,"%.2f*\n",angle_target);
 		steps = (int)ABS((angle_target/1.8f*8.0f));
+		sprintf(str,"%.4f*\n",angle_target);
 
 		HAL_UART_Transmit(&huart1,(uint8_t *)(str),strlen(str),10);
 		osDelay(650);
@@ -1388,28 +1491,29 @@ void StartUltraSonar(void *argument)
   /* Infinite loop */
   for(;;)
   {
-//	SonarTrig(sonarF);
-//	SonarTrig(sonarB);
-//	SonarTrig(sonarL);
-//	SonarTrig(sonarR);
-    osDelay(50);
-//	distF[count] = SonarMeasure(sonarF);
-//	distB[count] = SonarMeasure(sonarB);
-//	distL[count] = SonarMeasure(sonarL);
-//	distR[count] = SonarMeasure(sonarR);
-//	count++;
-//	if(count == 5)
-//	{
-//		qsort(distF,5,sizeof(float),CmpFloat);
-//		qsort(distB,5,sizeof(float),CmpFloat);
-//		qsort(distL,5,sizeof(float),CmpFloat);
-//		qsort(distR,5,sizeof(float),CmpFloat);
-//		myRob->dF = (distF[1]+distF[2]+distF[3])/3.0f;
-//		myRob->dB = (distB[1]+distB[2]+distB[3])/3.0f;
-//		myRob->dL = (distL[1]+distL[2]+distL[3])/3.0f;
-//		myRob->dR = (distR[1]+distR[2]+distR[3])/3.0f;
-//		count = 0;
-//	}
+	osDelay(10);
+	SonarTrig(sonarF);
+	SonarTrig(sonarB);
+	SonarTrig(sonarL);
+	SonarTrig(sonarR);
+    osDelay(100);
+	distF[count] = SonarMeasure(sonarF);
+	distB[count] = SonarMeasure(sonarB);
+	distL[count] = SonarMeasure(sonarL);
+	distR[count] = SonarMeasure(sonarR);
+	count++;
+	if(count == 5)
+	{
+		qsort(distF,5,sizeof(float),CmpFloat);
+		qsort(distB,5,sizeof(float),CmpFloat);
+		qsort(distL,5,sizeof(float),CmpFloat);
+		qsort(distR,5,sizeof(float),CmpFloat);
+		myRob->dF = (distF[1]+distF[2]+distF[3])/3.0f;
+		myRob->dB = (distB[1]+distB[2]+distB[3])/3.0f;
+		myRob->dL = (distL[1]+distL[2]+distL[3])/3.0f;
+		myRob->dR = (distR[1]+distR[2]+distR[3])/3.0f;
+		count = 0;
+	}
   }
   /* USER CODE END StartUltraSonar */
 }
