@@ -1155,7 +1155,7 @@ void StartDecision(void *argument)
 		  //move to find lighthouse
 		  else
 		  {
-			  printf("dir state = %d\n",dir_state);
+			  printf("%f,%f,%f,%f\n",myRob->dF,myRob->dB,myRob->dL,myRob->dR);
 			  if(dir_state == 0)
 			  {
 				vx = 20.0f;

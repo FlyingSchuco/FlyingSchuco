@@ -3,7 +3,7 @@
 <title>Static Call Graph - [HAL_F4_RTOS\HAL_F4_RTOS.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image HAL_F4_RTOS\HAL_F4_RTOS.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060300: Last Updated: Sat Nov 28 16:39:08 2020
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060300: Last Updated: Sat Nov 28 16:45:26 2020
 <BR><P>
 <H3>Maximum Stack Usage =        672 bytes + Unknown(Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -577,6 +577,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[e2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MotorSpeedMeasure
 <LI><a href="#[e9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_dmp_get_data
 <LI><a href="#[68]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartStepperControl
+<LI><a href="#[67]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartDecision
 </UL>
 
 <P><STRONG><a name="[82]"></a>__aeabi_d2f</STRONG> (Thumb, 56 bytes, Stack size 8 bytes, d2f.o(.text))
@@ -683,14 +684,14 @@ Global Symbols
 </UL>
 <BR>[Calls]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_Base_Start_IT
 <LI><a href="#[88]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;PID_Init
+<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
+<LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pvPortMalloc
 <LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_dmp_init
 <LI><a href="#[8c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StepperInit
 <LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SonarInit
 <LI><a href="#[8b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MotorRun
 <LI><a href="#[89]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MotorInit
 <LI><a href="#[94]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MotionStateInit
-<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
-<LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pvPortMalloc
 <LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_UART_Receive_IT
 <LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_Base_Start
 <LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
@@ -1210,7 +1211,7 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f407xx.o(RESET)
 </UL>
-<P><STRONG><a name="[94]"></a>MotionStateInit</STRONG> (Thumb, 74 bytes, Stack size 8 bytes, motion.o(i.MotionStateInit))
+<P><STRONG><a name="[94]"></a>MotionStateInit</STRONG> (Thumb, 78 bytes, Stack size 8 bytes, motion.o(i.MotionStateInit))
 <BR><BR>[Stack]<UL><LI>Max Depth = 88<LI>Call Chain = MotionStateInit &rArr; pvPortMalloc &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[92]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;pvPortMalloc
@@ -1301,10 +1302,11 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[69]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartUltraSonar
 </UL>
 
-<P><STRONG><a name="[67]"></a>StartDecision</STRONG> (Thumb, 450 bytes, Stack size 24 bytes, main.o(i.StartDecision))
-<BR><BR>[Stack]<UL><LI>Max Depth = 96<LI>Call Chain = StartDecision &rArr; osDelay &rArr; vTaskDelay &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
+<P><STRONG><a name="[67]"></a>StartDecision</STRONG> (Thumb, 502 bytes, Stack size 48 bytes, main.o(i.StartDecision))
+<BR><BR>[Stack]<UL><LI>Max Depth = 120<LI>Call Chain = StartDecision &rArr; osDelay &rArr; vTaskDelay &rArr; xTaskResumeAll &rArr; xTaskIncrementTick
 </UL>
 <BR>[Calls]<UL><LI><a href="#[e7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;osDelay
+<LI><a href="#[e3]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_f2d
 <LI><a href="#[e8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;DegRange180
 <LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
 </UL>
@@ -1997,7 +1999,8 @@ Global Symbols
 <P><STRONG><a name="[130]"></a>mpu_init</STRONG> (Thumb, 310 bytes, Stack size 32 bytes, inv_mpu.o(i.mpu_init))
 <BR><BR>[Stack]<UL><LI>Max Depth = 208<LI>Call Chain = mpu_init &rArr; mpu_set_sample_rate &rArr; mpu_lp_accel_mode &rArr; mpu_configure_fifo &rArr; mpu_reset_fifo &rArr; MPU_Write_Len &rArr; i2c_SendByte &rArr; gen_delay_us
 </UL>
-<BR>[Calls]<UL><LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
+<BR>[Calls]<UL><LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
+<LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
 <LI><a href="#[ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Read_Len
 <LI><a href="#[131]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_set_sensors
 <LI><a href="#[132]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_set_sample_rate
@@ -2006,7 +2009,6 @@ Global Symbols
 <LI><a href="#[138]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_set_bypass
 <LI><a href="#[136]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_set_accel_fsr
 <LI><a href="#[12e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_configure_fifo
-<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[8a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__2printf
 </UL>
 <BR>[Called By]<UL><LI><a href="#[8e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_dmp_init
@@ -2055,8 +2057,8 @@ Global Symbols
 <P><STRONG><a name="[10f]"></a>mpu_reset_fifo</STRONG> (Thumb, 346 bytes, Stack size 24 bytes, inv_mpu.o(i.mpu_reset_fifo))
 <BR><BR>[Stack]<UL><LI>Max Depth = 96<LI>Call Chain = mpu_reset_fifo &rArr; MPU_Write_Len &rArr; i2c_SendByte &rArr; gen_delay_us
 </UL>
-<BR>[Calls]<UL><LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
-<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
+<BR>[Calls]<UL><LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
+<LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
 </UL>
 <BR>[Called By]<UL><LI><a href="#[11a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dmp_enable_lp_quat
 <LI><a href="#[10d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;dmp_enable_6x_lp_quat
@@ -2100,9 +2102,9 @@ Global Symbols
 <P><STRONG><a name="[138]"></a>mpu_set_bypass</STRONG> (Thumb, 214 bytes, Stack size 24 bytes, inv_mpu.o(i.mpu_set_bypass))
 <BR><BR>[Stack]<UL><LI>Max Depth = 96<LI>Call Chain = mpu_set_bypass &rArr; MPU_Write_Len &rArr; i2c_SendByte &rArr; gen_delay_us
 </UL>
-<BR>[Calls]<UL><LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
+<BR>[Calls]<UL><LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
+<LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
 <LI><a href="#[ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Read_Len
-<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 </UL>
 <BR>[Called By]<UL><LI><a href="#[134]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_set_dmp_state
 <LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_init
@@ -2166,9 +2168,9 @@ Global Symbols
 <P><STRONG><a name="[131]"></a>mpu_set_sensors</STRONG> (Thumb, 178 bytes, Stack size 24 bytes, inv_mpu.o(i.mpu_set_sensors))
 <BR><BR>[Stack]<UL><LI>Max Depth = 112<LI>Call Chain = mpu_set_sensors &rArr; mpu_set_int_latched &rArr; MPU_Write_Len &rArr; i2c_SendByte &rArr; gen_delay_us
 </UL>
-<BR>[Calls]<UL><LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
+<BR>[Calls]<UL><LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
+<LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
 <LI><a href="#[13c]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_set_int_latched
-<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 </UL>
 <BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_run_self_test
 <LI><a href="#[130]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_init
@@ -3024,9 +3026,9 @@ Local Symbols
 <P><STRONG><a name="[127]"></a>get_st_biases</STRONG> (Thumb, 784 bytes, Stack size 48 bytes, inv_mpu.o(i.get_st_biases))
 <BR><BR>[Stack]<UL><LI>Max Depth = 120<LI>Call Chain = get_st_biases &rArr; MPU_Write_Len &rArr; i2c_SendByte &rArr; gen_delay_us
 </UL>
-<BR>[Calls]<UL><LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
+<BR>[Calls]<UL><LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
+<LI><a href="#[d6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Write_Len
 <LI><a href="#[ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MPU_Read_Len
-<LI><a href="#[8d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Delay
 <LI><a href="#[74]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__aeabi_ldivmod
 </UL>
 <BR>[Called By]<UL><LI><a href="#[13d]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;mpu_run_self_test
