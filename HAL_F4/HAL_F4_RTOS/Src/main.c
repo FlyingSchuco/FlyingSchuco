@@ -69,6 +69,7 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim8;
@@ -104,7 +105,7 @@ float vx = 0.0f,vy = 0.0f,	//cm/s
 	omega = 0.0f, // rad/s
 	yaw_target = 0.0f;	// deg
 float L = 16.0f, R = 3.0f;
-
+int endFlag = 0;
 
 /* USER CODE END PV */
 
@@ -123,6 +124,7 @@ static void MX_TIM6_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM7_Init(void);
+static void MX_TIM5_Init(void);
 void StartDefaultTask(void *argument);
 void StartIMUData(void *argument);
 void StartWheelControl(void *argument);
@@ -181,6 +183,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM7_Init();
+  MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
 	BSP_Init();
   /* USER CODE END 2 */
@@ -525,6 +528,51 @@ static void MX_TIM4_Init(void)
   /* USER CODE BEGIN TIM4_Init 2 */
 
   /* USER CODE END TIM4_Init 2 */
+
+}
+
+/**
+  * @brief TIM5 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM5_Init(void)
+{
+
+  /* USER CODE BEGIN TIM5_Init 0 */
+
+  /* USER CODE END TIM5_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM5_Init 1 */
+
+  /* USER CODE END TIM5_Init 1 */
+  htim5.Instance = TIM5;
+  htim5.Init.Prescaler = 8400-1;
+  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim5.Init.Period = 10000;
+  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim5, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM5_Init 2 */
+
+  /* USER CODE END TIM5_Init 2 */
 
 }
 
@@ -893,7 +941,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SONARR_TRIG_GPIO_Port, SONARR_TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, SONARF_TRIG_Pin|SONARL_TRIG_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_2|SONARL_TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SONARB_TRIG_GPIO_Port, SONARB_TRIG_Pin, GPIO_PIN_RESET);
@@ -917,8 +965,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SONARR_ECHO_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SONARF_TRIG_Pin SONARL_TRIG_Pin */
-  GPIO_InitStruct.Pin = SONARF_TRIG_Pin|SONARL_TRIG_Pin;
+  /*Configure GPIO pins : PG2 SONARL_TRIG_Pin */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|SONARL_TRIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -1124,6 +1172,7 @@ void StartDecision(void *argument)
   /* USER CODE BEGIN StartDecision */
 	float angle = 0.0f;
 	int state = 0, dir_state = 0;
+	int endState = 0;
   /* Infinite loop */
   for(;;)
   {
@@ -1132,286 +1181,259 @@ void StartDecision(void *argument)
 	  vy = 0.0f;
 	  yaw_target = 0.0f;
 	  #endif
-	  #ifdef DECISION
-
-	  if(myRob->target == 0)			//No targets are found 
+	  #ifdef DECISION	
+	  if(endFlag == 0)
 	  {
-		  yaw_target = 0.0f;
-		  //go back after bumping
-		  if(state == 1)
-		  {
-			  vx = 0.0f;
-			  vy = -25.0f;
-			  state = 0;
-			  osDelay(600);
-		  }
-		  else if(state == 2)
-		  {
-			  vx = 0.0f;
-			  vy = 25.0f;
-			  state = 0;
-			  osDelay(600);
-		  }
-		  //move to find lighthouse
-		  else
-		  {
-			  printf("%f,%f,%f,%f\n",myRob->dF,myRob->dB,myRob->dL,myRob->dR);
-			  if(dir_state == 0)
-			  {
-				vx = 20.0f;
-				vy = 0.0f;
-				if(myRob->dF < 45.0f && myRob->dB >= 45.0f)
-				{
-					dir_state = 1;
-				}
-				else if(myRob->dF < 45.0f && myRob->dB < 45.0f)
-				{
-					if(myRob->dR < 45.0f)
-					{
-						dir_state = 2;
-					}
-					else if(myRob->dL < 45.0f) 
-					{
-						dir_state = 3;
-					}
-					else
-					{
-						dir_state = 2;
-					}
-				}
-				else
-				{
-					dir_state = 0;
-				}
-			  }
-			  else if(dir_state == 1)
-			  {
-				vx = -20.0f;  
-				vy = 0.0f;
-				if(myRob->dB < 45.0f && myRob->dF >= 45.0f)
-				{
-					dir_state = 0;
-				}
-				else if(myRob->dB < 45.0f && myRob->dF < 45.0f)
-				{
-					if(myRob->dR < 45.0f)
-					{
-						dir_state = 2;
-					}
-					else if(myRob->dL < 45.0f) 
-					{
-						dir_state = 3;
-					}
-					else
-					{
-						dir_state = 2;
-					}
-				}
-				else
-				{
-					dir_state = 1;
-				}
-			  }
-			  else if(dir_state == 2)
-			  {
-				  vx = 0.0f;
-				  vy = -20.0f;
-				if(myRob->dL < 45.0f)
-				{
-					dir_state = 3;
-				}
-				else
-				{
-					if(myRob->dF > 45.0f)
-					{
-						dir_state = 0;
-					}
-					else if(myRob->dB > 45.0f)
-					{
-						dir_state = 1;
-					}
-					else
-					{
-						dir_state = 2;
-					}
-				}
-			  }
-			  else if(dir_state == 3)
-			  {
-				  vx = 0.0f;
-				  vy = 20.0f;
-				if(myRob->dR < 45.0f)
-				{
-					dir_state = 2;
-				}
-				else
-				{
-					if(myRob->dF > 45.0f)
-					{
-						dir_state = 0;
-					}
-					else if(myRob->dB > 45.0f)
-					{
-						dir_state = 1;
-					}
-					else
-					{
-						dir_state = 3;
-					}
-				}
-			  }
-		  }
-//		  if(fabs(myRob->yaw)<90.0f && flag == 0) 
-//		  {
-//			yaw_target = myRob->yaw + 5.0f;
-//		  }
-//		  else if(fabs(myRob->yaw)<90.0f && flag == 1) 
-//		  {
-//			 yaw_target = myRob->yaw - 5.0f;
-//		  }
-//		  else
-//		  {
-//			  flag = !flag;
-//			  if((myRob->yaw)>=90.0f)
-//			  {
-//				  yaw_target = 85.0f;
-//			  }
-//			  else if((myRob->yaw)<=-90.0f)
-//			  {
-//				  yaw_target = -85.0f;
-//			  }
-//		  }
-		  osDelay(25);
-		  //Cruise
-		  #ifdef CRUISE
-		  if(fabs(myRob->yaw) < 90.0f)
+		  if(myRob->target == 0)			//No targets are found 
 		  {
 			  yaw_target = 0.0f;
-		  }
-		  else
-		  {
-			  yaw_target = -180.0f;
-		  }
-		  
-		  if(fabs(myRob->yaw) < 10.0f)
-		  {
-		      myRob->x = (300.0f - myRob->dF + myRob->dB)/2.0f;
-			  myRob->y = (200.0f - myRob->dR + myRob->dL)/2.0f;
-		  }
-		  else if(fabs(myRob->yaw) > (180.0f - 10.0f))
-		  {
-		      myRob->x = (300.0f + myRob->dF - myRob->dB)/2.0f;
-			  myRob->y = (200.0f + myRob->dR - myRob->dL)/2.0f; 
-		  }
-		  else 
-		  {
-			  
-		  }
-		  
-		  if(fabs(myRob->x-150.0f)>5.0f)
-		  {
-			  vx = sign(150.0f - myRob->x) * 10.0f ;// * cos(myRob->yaw);
-		  }
-		  else 
-		  {
-			  vx = 0.0f;
-		  }
-		  
-		  if(fabs(myRob->y-100.0f)>5.0f)
-		  {
-			  vy = sign(150.0f - myRob->y) * 10.0f ;// * cos(myRob->yaw);
-		  }
-		  else 
-		  {
-			  vy = 0.0f;
-		  }
-		  #endif
-	  }
-	  else if(myRob->target == 1)	//target is found
-	  {
-		  // -360~360 to -180~180
-		  angle = DegRange180(myRob->yaw + stepperFront->pos);
-		  yaw_target = 0.0f;
-//		  yaw_target = myRob->yaw + stepperFront->pos;
-//		  vx = 0.0f;
-//		  vy = 0.0f;
-		  if(fabs(angle) < ANGLE_TH) 			//yaw is small
-		  {
-			  if(fabs(yaw_target-myRob->yaw)>2)
+			  //go back after bumping
+			  if(state == 1)
 			  {
 				  vx = 0.0f;
-				  vy = 0.0f;
-			  }
-			  else
-			  {
-				  vx = 25.0f;
-				  vy = 0.0f;
-			  }
-		  }
-		  else if( fabs(angle) > (180.0f - ANGLE_TH) )
-		  {
-			  if(fabs(yaw_target-myRob->yaw)>2)
-			  {
-				  vx = 0.0f;
-				  vy = 0.0f;
-			  }
-			  else
-			  {
-				  vx = -25.0f;
-				  vy = 0.0f;
-			  }
-		  }
-		  else 						//yaw is large enough
-		  {
-			  if(angle>0.0f)
-			  {
-				  vy = 25.0f;
-				  vx = 0.0f;
-				  state = 1;
-			  }
-			  else
-			  {
 				  vy = -25.0f;
-				  vx = 0.0f;
-				  state = 2;
+				  state = 0;
+				  osDelay(1000);
 			  }
-//			  yaw_target = myRob->yaw + stepperFront->pos;
-//			  if(fabs(yaw_target-myRob->yaw)>2)
-//			  {
-//				  vx = 0.0f;
-//				  vy = 0.0f;
-//			  }
-//			  else
-//			  {
-//				  vx = 10.0f ;//* cos(stepperFront->pos);
-//				  vy = 0.0f ;//* sin(stepperFront->pos);
-//			  }
-			  //ready to bump
+			  else if(state == 2)
+			  {
+				  vx = 0.0f;
+				  vy = 25.0f;
+				  state = 0;
+				  osDelay(1000);
+			  }
+			  //move to find lighthouse
+			  else
+			  {
+				  if(dir_state == 0)
+				  {
+					vx = 20.0f;
+					vy = 0.0f;
+					if(myRob->dF < 45.0f && myRob->dB >= 45.0f)
+					{
+						dir_state = 1;
+					}
+					else if(myRob->dF < 45.0f && myRob->dB < 45.0f)
+					{
+						if(myRob->dR < 45.0f)
+						{
+							dir_state = 2;
+						}
+						else if(myRob->dL < 45.0f) 
+						{
+							dir_state = 3;
+						}
+						else
+						{
+							dir_state = 2;
+						}
+					}
+					else
+					{
+						dir_state = 0;
+					}
+				  }
+				  else if(dir_state == 1)
+				  {
+					vx = -20.0f;  
+					vy = 0.0f;
+					if(myRob->dB < 45.0f && myRob->dF >= 45.0f)
+					{
+						dir_state = 0;
+					}
+					else if(myRob->dB < 45.0f && myRob->dF < 45.0f)
+					{
+						if(myRob->dR < 45.0f)
+						{
+							dir_state = 2;
+						}
+						else if(myRob->dL < 45.0f) 
+						{
+							dir_state = 3;
+						}
+						else
+						{
+							dir_state = 2;
+						}
+					}
+					else
+					{
+						dir_state = 1;
+					}
+				  }
+				  else if(dir_state == 2)
+				  {
+					  vx = 0.0f;
+					  vy = -20.0f;
+					if(myRob->dL < 45.0f)
+					{
+						dir_state = 3;
+					}
+					else
+					{
+						if(myRob->dF > 45.0f)
+						{
+							dir_state = 0;
+						}
+						else if(myRob->dB > 45.0f)
+						{
+							dir_state = 1;
+						}
+						else
+						{
+							dir_state = 2;
+						}
+					}
+				  }
+				  else if(dir_state == 3)
+				  {
+					  vx = 0.0f;
+					  vy = 20.0f;
+					if(myRob->dR < 45.0f)
+					{
+						dir_state = 2;
+					}
+					else
+					{
+						if(myRob->dF > 45.0f)
+						{
+							dir_state = 0;
+						}
+						else if(myRob->dB > 45.0f)
+						{
+							dir_state = 1;
+						}
+						else
+						{
+							dir_state = 3;
+						}
+					}
+				  }
+			  }
 			  
-//			  if(myRob->dF>30.0f)
-//			  {
-//				  vx = 30.0f * cos(stepperFront->pos);
-//				  vy = 30.0f * sin(stepperFront->pos);
-//			  }
-//			  else if(myRob->dF>15.0f)
-//			  {
-//				  vx = myRob->dF * cos(stepperFront->pos);
-//				  vy = myRob->dF * sin(stepperFront->pos);
-//			  }
-//			  else
-//			  {
-//				  vx = 10.0f * cos(stepperFront->pos);
-//				  vy = 10.0f * sin(stepperFront->pos);
-//			  }
+			  osDelay(25);
+		  }
+		  else if(myRob->target == 1)	//target is found
+		  {
+			  // -360~360 to -180~180
+			  angle = DegRange180(myRob->yaw + stepperFront->pos);
+			  yaw_target = 0.0f;
+
+			  if(fabs(angle) < ANGLE_TH) 			//yaw is small
+			  {
+				  if(fabs(yaw_target-myRob->yaw)>2)
+				  {
+					  vx = 0.0f;
+					  vy = 0.0f;
+				  }
+				  else
+				  {
+					  vx = 25.0f;
+					  vy = 0.0f;
+				  }
+			  }
+			  else if( fabs(angle) > (180.0f - ANGLE_TH) )
+			  {
+				  if(fabs(yaw_target-myRob->yaw)>2)
+				  {
+					  vx = 0.0f;
+					  vy = 0.0f;
+				  }
+				  else
+				  {
+					  vx = -25.0f;
+					  vy = 0.0f;
+				  }
+			  }
+			  else 						//yaw is large enough
+			  {
+				  if(angle>0.0f)
+				  {
+					  vy = 25.0f;
+					  vx = 0.0f;
+					  state = 1;
+				  }
+				  else
+				  {
+					  vy = -25.0f;
+					  vx = 0.0f;
+					  state = 2;
+				  }
+			  }	
+		  }
+		  else 							//Not used
+		  {
 			  
 		  }
-			
-	  }
-	  else 							//Not used
+	  } 
+	  else if(endFlag == 1)
 	  {
-		  
-	  }
-	  
+			if(endState == 0)
+			{
+				vx = -25.0f;
+				vy = 0.0f;
+				if(myRob->dB < 45.0f)
+				{
+					endState = 1;
+				}
+				else 
+				{
+					endState = 0;
+				}
+			}
+			else if(endState == 1)
+			{
+				vx = 0.0f;
+				vy = -25.0f;
+				if(myRob->target == 1 && ABS(myRob->pixel_dx) < 5 )
+				{
+					endState = 3;
+				}
+				else if(myRob->dL < 45.0f)
+				{
+					endState = 2;
+				}
+				else 
+				{
+					endState = 1;
+				}
+			}
+			else if(endState == 2)
+			{
+				vx = 0.0f;
+				vy = 25.0f;
+				if(myRob->target == 1 && ABS(myRob->pixel_dx) < 5 )
+				{
+					endState = 3;
+				}
+				else if(myRob->dR < 45.0f)
+				{
+					endState = 1;
+				}
+				else 
+				{
+					endState = 2;
+				}
+			}
+			else if(endState == 3)
+			{
+				vx = -10.0f;
+				vy = 0.0f;
+				if(myRob->dB < 10.0f)
+				{
+					endState = 4;
+				}
+				else
+				{
+					endState = 3;
+				}
+			}
+			else if(endState == 4)
+			{
+				vx = 0.0f;
+				vy = 0.0f;
+			}
+      }
 	#endif
     osDelay(20);
   }
@@ -1434,14 +1456,58 @@ void StartStepperControl(void *argument)
   /* Infinite loop */
   for(;;)
   {
-	if(myRob->target == 1)
-	{
-		angle_target = PID_Calc(STP_PID,0,myRob->pixel_dx);
+	 if(endFlag == 0)
+	 {
+		if(myRob->target == 1)
+		{
+			angle_target = PID_Calc(STP_PID,0,myRob->pixel_dx);
+			steps = (int)ABS((angle_target/1.8f*8.0f));
+			sprintf(str,"%.4f*\n",angle_target);
+
+			HAL_UART_Transmit(&huart1,(uint8_t *)(str),strlen(str),10);
+			osDelay(20);
+			if(angle_target>0)
+			{
+				stepperFront->pos += steps*1.8f/8.0f;
+			}
+			else 
+			{
+				stepperFront->pos -= steps*1.8f/8.0f;
+			}
+		}
+		else
+		{
+			angle_target = -36.0f;
+			steps = (int)ABS((angle_target/1.8f*8.0f));
+			sprintf(str,"%.4f*\n",angle_target);
+
+			HAL_UART_Transmit(&huart1,(uint8_t *)(str),strlen(str),10);
+			osDelay(650);
+			if(angle_target>0)
+			{
+				stepperFront->pos += steps*1.8f/8.0f;
+			}
+			else 
+			{
+				stepperFront->pos -= steps*1.8f/8.0f;
+			}
+		}
+		stepperFront->pos = DegRange180(stepperFront->pos);
+	}
+	 else if(endFlag == 1)
+	 {
+		 if(stepperFront->pos > 0.0f)
+		 {
+			angle_target = 180.0f - stepperFront->pos;
+		 }
+		 else
+		 {
+			angle_target = -180.0f - stepperFront->pos;
+		 }
 		steps = (int)ABS((angle_target/1.8f*8.0f));
 		sprintf(str,"%.4f*\n",angle_target);
-
 		HAL_UART_Transmit(&huart1,(uint8_t *)(str),strlen(str),10);
-		osDelay(20);
+		osDelay(1000);
 		if(angle_target>0)
 		{
 			stepperFront->pos += steps*1.8f/8.0f;
@@ -1450,25 +1516,7 @@ void StartStepperControl(void *argument)
 		{
 			stepperFront->pos -= steps*1.8f/8.0f;
 		}
-	}
-    else
-	{
-		angle_target = 36.0f;
-		steps = (int)ABS((angle_target/1.8f*8.0f));
-		sprintf(str,"%.4f*\n",angle_target);
-
-		HAL_UART_Transmit(&huart1,(uint8_t *)(str),strlen(str),10);
-		osDelay(650);
-		if(angle_target>0)
-		{
-			stepperFront->pos += steps*1.8f/8.0f;
-		}
-		else 
-		{
-			stepperFront->pos -= steps*1.8f/8.0f;
-		}
-	}
-	stepperFront->pos = DegRange180(stepperFront->pos);
+	 }
   }
   /* USER CODE END StartStepperControl */
 }

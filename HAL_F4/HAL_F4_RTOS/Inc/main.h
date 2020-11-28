@@ -73,8 +73,6 @@ void Error_Handler(void);
 #define RB_A_GPIO_Port GPIOB
 #define RB_B_Pin GPIO_PIN_15
 #define RB_B_GPIO_Port GPIOB
-#define SONARF_TRIG_Pin GPIO_PIN_2
-#define SONARF_TRIG_GPIO_Port GPIOG
 #define SONARF_ECHO_Pin GPIO_PIN_3
 #define SONARF_ECHO_GPIO_Port GPIOG
 #define SONARF_ECHO_EXTI_IRQn EXTI3_IRQn
