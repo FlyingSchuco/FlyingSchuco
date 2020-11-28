@@ -1186,9 +1186,29 @@ void StartDecision(void *argument)
 	  {
 		  if(myRob->target == 0)			//No targets are found 
 		  {
+<<<<<<< HEAD
 			  yaw_target = 0.0f;
 			  //go back after bumping
 			  if(state == 1)
+=======
+			  vx = 0.0f;
+			  vy = -25.0f;
+			  state = 0;
+			  osDelay(600);
+		  }
+		  else if(state == 2)
+		  {
+			  vx = 0.0f;
+			  vy = 25.0f;
+			  state = 0;
+			  osDelay(600);
+		  }
+		  //move to find lighthouse
+		  else
+		  {
+			  printf("dir state = %d\n",dir_state);
+			  if(dir_state == 0)
+>>>>>>> parent of 3682606... 1128 17
 			  {
 				  vx = 0.0f;
 				  vy = -25.0f;
