@@ -29,7 +29,7 @@ GREEN = 2
 BLUE = 3
 LOST = 4
 
-team = RED
+team = GREEN
 state = 0
 count = 0
 
@@ -87,9 +87,9 @@ while(True):
             send_data(0,0,LOST)
     elif team == GREEN:
         if state == 0:
-            blobs = img.find_blobs([GreenThreshold],merge=True,pixels_threshold=20)
+            blobs = img.find_blobs([GreenThreshold],merge=True,pixels_threshold=10)
         elif state == 1:
-            blobs = img.find_blobs([GreenCard],merge=True,pixels_threshold=20)
+            blobs = img.find_blobs([GreenCard],merge=True,pixels_threshold=10)
         if blobs:
             i = blobs[0];
             img.draw_rectangle(i[0:4])

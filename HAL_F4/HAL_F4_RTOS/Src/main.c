@@ -69,7 +69,6 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
-TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim8;
@@ -124,7 +123,6 @@ static void MX_TIM6_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM7_Init(void);
-static void MX_TIM5_Init(void);
 void StartDefaultTask(void *argument);
 void StartIMUData(void *argument);
 void StartWheelControl(void *argument);
@@ -183,7 +181,6 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM7_Init();
-  MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
 	BSP_Init();
   /* USER CODE END 2 */
@@ -528,51 +525,6 @@ static void MX_TIM4_Init(void)
   /* USER CODE BEGIN TIM4_Init 2 */
 
   /* USER CODE END TIM4_Init 2 */
-
-}
-
-/**
-  * @brief TIM5 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM5_Init(void)
-{
-
-  /* USER CODE BEGIN TIM5_Init 0 */
-
-  /* USER CODE END TIM5_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-  /* USER CODE BEGIN TIM5_Init 1 */
-
-  /* USER CODE END TIM5_Init 1 */
-  htim5.Instance = TIM5;
-  htim5.Init.Prescaler = 8400-1;
-  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim5.Init.Period = 10000;
-  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-  if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim5, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM5_Init 2 */
-
-  /* USER CODE END TIM5_Init 2 */
 
 }
 
@@ -941,7 +893,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(SONARR_TRIG_GPIO_Port, SONARR_TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, GPIO_PIN_2|SONARL_TRIG_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOG, SONARF_TRIG_Pin|SONARL_TRIG_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SONARB_TRIG_GPIO_Port, SONARB_TRIG_Pin, GPIO_PIN_RESET);
@@ -965,8 +917,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(SONARR_ECHO_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PG2 SONARL_TRIG_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|SONARL_TRIG_Pin;
+  /*Configure GPIO pins : SONARF_TRIG_Pin SONARL_TRIG_Pin */
+  GPIO_InitStruct.Pin = SONARF_TRIG_Pin|SONARL_TRIG_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -1186,43 +1138,23 @@ void StartDecision(void *argument)
 	  {
 		  if(myRob->target == 0)			//No targets are found 
 		  {
-<<<<<<< HEAD
 			  yaw_target = 0.0f;
 			  //go back after bumping
 			  if(state == 1)
-=======
-			  vx = 0.0f;
-			  vy = -25.0f;
-			  state = 0;
-			  osDelay(600);
-		  }
-		  else if(state == 2)
-		  {
-			  vx = 0.0f;
-			  vy = 25.0f;
-			  state = 0;
-			  osDelay(600);
-		  }
-		  //move to find lighthouse
-		  else
-		  {
-			  printf("dir state = %d\n",dir_state);
-			  if(dir_state == 0)
->>>>>>> parent of 3682606... 1128 17
 			  {
 				  vx = 0.0f;
 				  vy = -25.0f;
 				  state = 0;
-				  osDelay(1000);
+				  osDelay(600);
 			  }
 			  else if(state == 2)
 			  {
 				  vx = 0.0f;
 				  vy = 25.0f;
 				  state = 0;
-				  osDelay(1000);
+				  osDelay(600);
 			  }
-			  //move to find lighthouse
+		  //move to find lighthouse
 			  else
 			  {
 				  if(dir_state == 0)
@@ -1453,7 +1385,7 @@ void StartDecision(void *argument)
 				vx = 0.0f;
 				vy = 0.0f;
 			}
-      }
+		}
 	#endif
     osDelay(20);
   }
